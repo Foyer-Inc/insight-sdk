@@ -13,6 +13,7 @@
     "@types/sharp": "^0.28.6"
   },
   "scripts": {
+    "prepare": "npm run build",
     "start": "node ./build/example/example.js",
     "build": "rm -rf ./build; tsc --build tsconfig.json",
     "start_local": "rm -rf ./build; tsc --build tsconfig.json; node ./build/example/example.js",
