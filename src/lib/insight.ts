@@ -2,20 +2,34 @@ import fetch from 'node-fetch';
 import { checkStatus, resizeImage } from './helpers';
 
 type InsightOptions = {
+    authorization?: string;
+    force?: boolean;
+    includeSegmentations?: boolean;
+    includeTagpoints?: boolean;
+}
+
+type ClassifyPayload = {
+    file?: string
+    files?: string[]
+    url?: string;
+    urls?: string[];
+    force?: boolean;
     includeSegmentations?: boolean;
     includeTagpoints?: boolean;
 }
 
 export class Insight {
+    public force: boolean = false
     public includeSegmentations: boolean = false;
     public includeTagpoints: boolean = false;
 
     private authorization?: string;
-    private baseURL = 'http://localhost:5000'
+    public baseURL = 'http://localhost:5000'
     private classifyURL = this.baseURL + '/images/classify'
 
-    constructor(authorization?: string, options: InsightOptions = {}) {
-        this.authorization = authorization
+    constructor(options: InsightOptions = {}) {
+        this.authorization = options.authorization
+        this.force = options.force ?? false
         this.includeSegmentations = options.includeSegmentations ?? false;
         this.includeTagpoints = options.includeTagpoints ?? false
     }
@@ -67,7 +81,7 @@ export class Insight {
     }
 
     /**
-     * @param file - Array of images encoded as base64 strings
+     * @param files - Array of images encoded as base64 strings
      * @param options - can override class level properties
      * @returns classifications and detections
      * @throws can throw errors
@@ -80,11 +94,18 @@ export class Insight {
     }
 
     private async classifyRequest(files: string | string[], options: InsightOptions) {
-        const payload = {
-            file: files,
+        const payload: ClassifyPayload = {
+            force: options.force ?? this.force,
             includeSegmentations: options.includeSegmentations ?? this.includeSegmentations,
             includeTagpoints: options.includeTagpoints ?? this.includeTagpoints
         }
+
+        if (Array.isArray(files)) {
+            payload.files = files
+        } else {
+            payload.file = files
+        }
+
         let response = await fetch(this.classifyURL, {
             method: 'POST',
             headers: {
