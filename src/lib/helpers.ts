@@ -1,5 +1,5 @@
 import { Response } from 'node-fetch';
-import sharp from 'sharp';
+import jimp from 'jimp';
 
 class HTTPResponseError extends Error {
     constructor(response: Response) {
@@ -27,6 +27,6 @@ export async function resizeImage(file: string, width?: number, height?: number)
     if (file.startsWith('data')) {
         b64Str = file.split(',')[1]
     }
-    const resizedBuffer = await sharp(Buffer.from(b64Str, 'base64')).resize(width ?? 1024, height ?? 1024).toBuffer()
-    return `data:image/png;base64,${resizedBuffer.toString('base64')}`;
+    let jimpImage = await jimp.read(Buffer.from(b64Str, 'base64'))
+    return jimpImage.resize(width ?? 1024, height ?? 1024).getBase64Async(jimp.MIME_JPEG);
 }

@@ -5,14 +5,12 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "dependencies": {
-    "sharp": "0.28.3",
-    "typescript": "^4.4.2",
     "@types/node-fetch": "^2.5.8",
-    "node-fetch": "^2.6.1"
+    "jimp": "^0.16.1",
+    "node-fetch": "^2.6.1",
+    "typescript": "^4.4.2"
   },
-  "devDependencies": {
-    "@types/sharp": "0.28.3"
-  },
+  "devDependencies": {},
   "scripts": {
     "prepare": "npm run build",
     "start": "node ./build/example/example.js",
