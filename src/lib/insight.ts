@@ -1,22 +1,6 @@
 import fetch from 'node-fetch';
 import { checkStatus, resizeImage } from './helpers';
-
-type InsightOptions = {
-    authorization?: string;
-    force?: boolean;
-    includeSegmentations?: boolean;
-    includeTagpoints?: boolean;
-}
-
-type ClassifyPayload = {
-    file?: string
-    files?: string[]
-    url?: string;
-    urls?: string[];
-    force?: boolean;
-    includeSegmentations?: boolean;
-    includeTagpoints?: boolean;
-}
+import { InsightOptions, ClassifyPayload, ClassifyResult } from './types';
 
 export class Insight {
     public force: boolean = false
@@ -75,9 +59,11 @@ export class Insight {
      * @returns classifications and detections
      * @throws can throw errors
      */
-    public async classify(file: string, options: InsightOptions = {}) {
+    public async classify(file: string, options: InsightOptions = {}): Promise<ClassifyResult> {
         const resized = await resizeImage(file)
-        return await this.classifyRequest(resized, options);
+
+        return await this.classifyRequest(resized, options) as ClassifyResult
+
     }
 
     /**
@@ -86,14 +72,15 @@ export class Insight {
      * @returns classifications and detections
      * @throws can throw errors
      */
-    public async bulkClassify(files: string[], options: InsightOptions = {}) {
+    public async bulkClassify(files: string[], options: InsightOptions = {}): Promise<ClassifyResult[]> {
         const resized = await Promise.all(
             files.map(async (f: string) => await resizeImage(f))
         );
-        return await this.classifyRequest(resized, options);
+
+        return await this.classifyRequest(resized, options) as ClassifyResult[];
     }
 
-    private async classifyRequest(files: string | string[], options: InsightOptions) {
+    private async classifyRequest(files: string | string[], options: InsightOptions): Promise<ClassifyResult | ClassifyResult[]> {
         const payload: ClassifyPayload = {
             force: options.force ?? this.force,
             includeSegmentations: options.includeSegmentations ?? this.includeSegmentations,
@@ -117,6 +104,12 @@ export class Insight {
 
         response = checkStatus(response);
 
-        return await response.json()
+        const result = await response.json()
+
+        if (Array.isArray(result)) {
+            return result.map((r: any, idx: number) => new ClassifyResult(files[idx], r))
+        } else {
+            return new ClassifyResult(files as string, result);
+        }
     }
 }

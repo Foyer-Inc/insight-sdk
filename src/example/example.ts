@@ -6,8 +6,12 @@ function main() {
     function classifyImage() {
         const image = fs.readFileSync("assets/kitchen.jpeg", { encoding: 'base64' })
         const file = `data:image/jpeg;base64,${image}`;
-        sdk.classify(file)
-            .then((r) => console.log(JSON.stringify(r)))
+        sdk.classify(file, { includeSegmentations: true })
+            .then(async (r) => {
+                r.howdy()
+                await r.extractDetection("cabinet")
+                fs.writeFileSync("assets/response.json", JSON.stringify(r))
+            })
             .catch(console.error);
     }
 
