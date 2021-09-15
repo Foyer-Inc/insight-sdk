@@ -27,7 +27,7 @@ export function checkStatus(response: Response) {
 export async function resizeImage(file: string, width?: number, height?: number): Promise<string> {
     let b64Str = sanitizeBase64(file)
     let jimpImage = await jimp.read(Buffer.from(b64Str, 'base64'))
-    return jimpImage.resize(width ?? 1024, height ?? 1024).getBase64Async(jimp.MIME_JPEG);
+    return jimpImage.resize(width ?? 512, height ?? 512).getBase64Async(jimp.MIME_JPEG);
 }
 
 export function sanitizeBase64(file: string) {
