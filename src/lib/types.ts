@@ -72,11 +72,16 @@ export class ClassifyResult {
             //let encodedMessage = utf8Encode.encode(cocoCounts);
             const { size, counts } = foundDetection.segmentation;
             const mask = toMaskImageData(decode(rleFromString(counts)), size[0], size[1]);
-            const jimpMask = await jimp.read(mask)
+            const canvas = document.createElement("canvas")
+            canvas.width = mask.width
+            canvas.height = mask.height
+            const ctx = canvas.getContext("2d");
+            ctx.putImageData(mask, 0, 0);
+            const b64 = canvas.toDataURL()
+            const jimpMask = await jimp.read(Buffer.from(b64, "base64"))
             jimpMask.write("assets/mask.png")
         } else {
             return `No detection with class: ${className} found`
         }
-
     }
 }
