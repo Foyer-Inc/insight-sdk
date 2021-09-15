@@ -1,5 +1,6 @@
 import { decode, rleFromString, toMaskImageData } from "./rle"
 import jimp from 'jimp';
+import { makeDataURLFromDetection, sanitizeBase64 } from "./helpers";
 
 export type InsightOptions = {
     authorization?: string;
@@ -18,13 +19,13 @@ export type ClassifyPayload = {
     includeTagpoints?: boolean;
 }
 
-type Classification = {
+export type Classification = {
     confidence: number;
     name: string;
     rank: number;
 }
 
-type Detection = {
+export type Detection = {
     class: string;
     area: number;
     boundingBox: number[];
@@ -33,12 +34,12 @@ type Detection = {
     segmentation?: Segmentation;
 }
 
-type Segmentation = {
+export type Segmentation = {
     size: number[];
     counts: string;
 }
 
-type ImageMetadata = {
+export type ImageMetadata = {
     md5: string;
     width: number;
     height: number;
@@ -62,24 +63,18 @@ export class ClassifyResult {
         console.log(this.detections.map((d: Detection) => d.class))
     }
 
-    async extractDetection(className: string) {
-        console.log(className);
-        console.log(this.detections.map((d: Detection) => d.class))
-
+    async extractDetection(className: string): Promise<string> {
         let foundDetection = this.detections.find((d: Detection) => d.class === className)
-        console.log(foundDetection)
+
         if (foundDetection && foundDetection.segmentation) {
-            //let encodedMessage = utf8Encode.encode(cocoCounts);
-            const { size, counts } = foundDetection.segmentation;
-            const mask = toMaskImageData(decode(rleFromString(counts)), size[0], size[1]);
-            const canvas = document.createElement("canvas")
-            canvas.width = mask.width
-            canvas.height = mask.height
-            const ctx = canvas.getContext("2d");
-            ctx.putImageData(mask, 0, 0);
-            const b64 = canvas.toDataURL()
-            const jimpMask = await jimp.read(Buffer.from(b64, "base64"))
-            jimpMask.write("assets/mask.png")
+            const dataURL = makeDataURLFromDetection(foundDetection);
+            const buf = Buffer.from(dataURL, 'base64')
+            const jimpMask = await jimp.read(buf)
+            const jimpImage = await jimp.read(Buffer.from(sanitizeBase64(this.image), 'base64'))
+
+            jimpImage.mask(jimpMask, 0, 0)
+
+            return jimpImage.getBase64Async(jimp.MIME_JPEG);
         } else {
             return `No detection with class: ${className} found`
         }
