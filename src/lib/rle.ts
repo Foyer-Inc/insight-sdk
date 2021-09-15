@@ -115,15 +115,18 @@ export const decode = (message: number[]): Uint8ClampedArray => {
  * ([0, 0, 0, 0], 2, 2) -> ImageData
  * @returns {Array} Returns sequence of bits
  */
-export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
+export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): string => {
     let dataWithAdditionalLayers = [];
     for (let i = 0; i < data.length; i++) {
         dataWithAdditionalLayers.push(...[data[i], data[i], data[i], 255]);
     }
-    let image = new ImageData(
-        new Uint8ClampedArray(dataWithAdditionalLayers),
-        w,
-        h
-    );
-    return image;
+    // let image = new ImageData(
+    //     new Uint8ClampedArray(dataWithAdditionalLayers),
+    //     w,
+    //     h
+    // );
+    // return image;
+    var u8 = new Uint8ClampedArray(dataWithAdditionalLayers);
+    var decoder = new TextDecoder('utf8');
+    return btoa(decoder.decode(u8));
 };

@@ -12,7 +12,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "prepare": "npm run build",
+    "prepare": "rm -rf ./build; tsc --build tsconfig.json",
     "start": "node ./build/example/example.js",
     "build": "rm -rf ./build; tsc --build tsconfig.json",
     "start_local": "rm -rf ./build; tsc --build tsconfig.json; node ./build/example/example.js",

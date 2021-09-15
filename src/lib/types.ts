@@ -70,8 +70,9 @@ export class ClassifyResult {
         console.log(foundDetection)
         if (foundDetection && foundDetection.segmentation) {
             //let encodedMessage = utf8Encode.encode(cocoCounts);
-            const mask = toMaskImageData(decode(rleFromString(foundDetection.segmentation.counts)), 1024, 1024);
-            const jimpMask = await jimp.read(Buffer.from(mask.data))
+            const { size, counts } = foundDetection.segmentation;
+            const mask = toMaskImageData(decode(rleFromString(counts)), size[0], size[1]);
+            const jimpMask = await jimp.read(mask)
             jimpMask.write("assets/mask.png")
         } else {
             return `No detection with class: ${className} found`
