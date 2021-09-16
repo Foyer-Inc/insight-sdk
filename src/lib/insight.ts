@@ -97,7 +97,7 @@ export class Insight {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': this.authorization
+                'Authorization': options.authorization ?? this.authorization
             },
             body: JSON.stringify(payload),
         });

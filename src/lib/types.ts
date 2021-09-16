@@ -1,6 +1,4 @@
-import { decode, rleFromString, toMaskImageData } from "./rle"
-import jimp from 'jimp';
-import { makeDataURLFromDetection, sanitizeBase64 } from "./helpers";
+import { applyBlur, makeMaskStringFromDetection } from "./helpers";
 
 export type InsightOptions = {
     authorization?: string;
@@ -58,25 +56,18 @@ export class ClassifyResult {
         this.metadata = result.metadata
     }
 
-    howdy = () => {
-        console.log(this.metadata)
-        console.log(this.detections.map((d: Detection) => d.class))
-    }
-
-    async extractDetection(className: string): Promise<string> {
+    /**
+     *
+     * @param className the name of the detection to blur in the original image
+     * @returns Image with detection blurred as base64 encoded string
+     */
+    async blurDetection(className: string): Promise<string> {
         let foundDetection = this.detections.find((d: Detection) => d.class === className)
 
         if (foundDetection && foundDetection.segmentation) {
-            const dataURL = makeDataURLFromDetection(foundDetection);
-            const buf = Buffer.from(dataURL, 'base64')
-            const jimpMask = await jimp.read(buf)
-            const jimpImage = await jimp.read(Buffer.from(sanitizeBase64(this.image), 'base64'))
-            jimpMask.rotate(-90)
-            jimpMask.flip(true, false)
-            jimpMask.blur(5)
-            jimpImage.mask(jimpMask, 0, 0)
+            const maskImage = await makeMaskStringFromDetection(foundDetection);
+            return applyBlur(this.image, maskImage);
 
-            return jimpMask.getBase64Async(jimp.MIME_JPEG);
         } else {
             return `No detection with class: ${className} found`
         }
