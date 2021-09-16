@@ -66,7 +66,7 @@ export class ClassifyResult {
 
         if (foundDetection && foundDetection.segmentation) {
             const maskImage = await makeMaskStringFromDetection(foundDetection);
-            return applyBlur(this.image, maskImage);
+            return await applyBlur(this.image, maskImage);
 
         } else {
             return `No detection with class: ${className} found`

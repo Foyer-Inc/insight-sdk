@@ -83,23 +83,23 @@ function imageDataToBase64(imageData: ImageData): string {
  * @param blur should the image be blurred before drawing
  * @returns return imagebitmap as Uint8ClampedArray
  */
-function getImageArray(originalImage: string, blur: boolean): Uint8ClampedArray {
-    console.log(originalImage, blur)
-    const clampedArray = new Uint8ClampedArray(Buffer.from(sanitizeBase64(originalImage), 'base64'))
+async function getImageArray(originalImage: string, blur: boolean) {
+    console.log(originalImage, blur);
+    const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
+    const blob = new Blob([clampedArray])
+    const bitmap = await createImageBitmap(blob)
+
+    const canvas = document.createElement("canvas");
+    canvas.width = DEFAULT_WIDTH;
+    canvas.height = DEFAULT_WIDTH;
+    var ctx = canvas.getContext("2d");
 
     if (blur) {
-        const canvas = document.createElement("canvas")
-        canvas.width = DEFAULT_WIDTH
-        canvas.height = DEFAULT_WIDTH
-        var ctx = canvas.getContext("2d");
         ctx.filter = 'blur(5px)';
-        const imageData = new ImageData(clampedArray, canvas.width, canvas.height)
-        ctx.putImageData(imageData, 0, 0);
-
-        return ctx.getImageData(0, 0, canvas.width, canvas.height).data
     }
 
-    return clampedArray;
+    ctx.drawImage(bitmap, 0, 0)
+    return ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 }
 
 /**
@@ -107,12 +107,12 @@ function getImageArray(originalImage: string, blur: boolean): Uint8ClampedArray 
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string
  */
-export function applyBlur(originalImage: string, mask: string): string {
-    const maskArray = getImageArray(mask, false);
+export async function applyBlur(originalImage: string, mask: string): Promise<string> {
+    const maskArray = await getImageArray(mask, false);
     console.log(maskArray)
-    const imageArray = getImageArray(originalImage, false);
+    const imageArray = await getImageArray(originalImage, false);
     console.log(imageArray)
-    const blurredArray = getImageArray(originalImage, true);
+    const blurredArray = await getImageArray(originalImage, true);
     console.log(blurredArray)
     const length = imageArray.length
     const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
