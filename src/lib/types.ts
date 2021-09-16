@@ -67,12 +67,14 @@ export class ClassifyResult {
         let foundDetection = this.detections.find((d: Detection) => d.class === className)
 
         if (foundDetection && foundDetection.segmentation) {
-            const dataURL = makeDataURLFromDetection(this.image, foundDetection);
+            const dataURL = makeDataURLFromDetection(foundDetection);
             const buf = Buffer.from(dataURL, 'base64')
             const jimpMask = await jimp.read(buf)
-            // const jimpImage = await jimp.read(Buffer.from(sanitizeBase64(this.image), 'base64'))
-            // jimpMask.rotate(90)
-            // jimpImage.mask(jimpMask, 0, 0)
+            const jimpImage = await jimp.read(Buffer.from(sanitizeBase64(this.image), 'base64'))
+            jimpMask.rotate(-90)
+            jimpMask.flip(true, false)
+            jimpMask.blur(5)
+            jimpImage.mask(jimpMask, 0, 0)
 
             return jimpMask.getBase64Async(jimp.MIME_JPEG);
         } else {

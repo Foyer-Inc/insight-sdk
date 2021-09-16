@@ -38,24 +38,14 @@ export function sanitizeBase64(file: string) {
     return file
 }
 
-export function makeDataURLFromDetection(image: string, detection: Detection) {
-    const { boundingBox } = detection;
-    const coords = boundingBox.map((v: number) => v * 512)
-    //const mask = toMaskImageData(decode(rleFromString(counts)), size[0], size[1]);
-    const img = new Image();
-    img.src = image;
+export function makeDataURLFromDetection(detection: Detection) {
+    const { size, counts } = detection.segmentation;
+    const mask = toMaskImageData(decode(rleFromString(counts)), size[0], size[1]);
     const canvas = document.createElement("canvas")
-    canvas.width = img.width
-    canvas.height = img.height
+    canvas.width = mask.width
+    canvas.height = mask.height
     const ctx = canvas.getContext("2d");
-    ctx.filter = 'blur(5px)';
-    ctx.drawImage(img, 0, 0);
-    var imgData = ctx.getImageData(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1]);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.filter = 'none';
-    ctx.drawImage(img, 0, 0);
-
-    ctx.putImageData(imgData, coords[0], coords[0]);
+    ctx.putImageData(mask, 0, 0);
 
     const b64 = canvas.toDataURL()
 

@@ -101,7 +101,7 @@ export const decode = (message: number[]): Uint8ClampedArray => {
     let isZero = true;
     for (let i = 0; i < message.length; i++) {
         for (let j = 0; j < message[i]; j++) {
-            imageArray.push(isZero ? 0 : 255);
+            imageArray.push(isZero ? 255 : 0);
         }
         // imageArray.push(...Array(message[i]).fill(isZero ? 0 : 255));
         isZero = !isZero;
