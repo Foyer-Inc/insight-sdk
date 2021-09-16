@@ -84,7 +84,8 @@ function imageDataToBase64(imageData: ImageData): string {
  * @returns return imagebitmap as Uint8ClampedArray
  */
 function getImageArray(originalImage: string, blur: boolean): Uint8ClampedArray {
-    const clampedArray = base64ToClampedArray(originalImage)
+    console.log(originalImage, blur)
+    const clampedArray = new Uint8ClampedArray(Buffer.from(sanitizeBase64(originalImage), 'base64'))
 
     if (blur) {
         const canvas = document.createElement("canvas")
@@ -101,16 +102,6 @@ function getImageArray(originalImage: string, blur: boolean): Uint8ClampedArray 
     return clampedArray;
 }
 
-function base64ToClampedArray(base64: string): Uint8ClampedArray {
-    var binary_string = window.atob(base64);
-    var len = binary_string.length;
-    var bytes = new Uint8ClampedArray(len);
-    for (var i = 0; i < len; i++) {
-        bytes[i] = binary_string.charCodeAt(i);
-    }
-    return bytes;
-}
-
 /**
  *
  * @param originalImage the original image as a base64 encoded string
@@ -118,15 +109,18 @@ function base64ToClampedArray(base64: string): Uint8ClampedArray {
  */
 export function applyBlur(originalImage: string, mask: string): string {
     const maskArray = getImageArray(mask, false);
+    console.log(maskArray)
     const imageArray = getImageArray(originalImage, false);
+    console.log(imageArray)
     const blurredArray = getImageArray(originalImage, true);
+    console.log(blurredArray)
     const length = imageArray.length
     const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
 
     for (let i = 0; i < length; i++) {
         destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : imageArray[i]
     }
-
+    console.log(destinationArray)
     return imageDataToBase64(new ImageData(
         destinationArray,
         DEFAULT_WIDTH,
