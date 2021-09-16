@@ -84,19 +84,31 @@ function imageDataToBase64(imageData: ImageData): string {
  * @returns return imagebitmap as Uint8ClampedArray
  */
 function getImageArray(originalImage: string, blur: boolean): Uint8ClampedArray {
-    const image = new Image()
-    image.src = originalImage
-    var canvas = document.createElement("canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
-    var ctx = canvas.getContext("2d");
+    const clampedArray = base64ToClampedArray(originalImage)
+
     if (blur) {
+        const canvas = document.createElement("canvas")
+        canvas.width = DEFAULT_WIDTH
+        canvas.height = DEFAULT_WIDTH
+        var ctx = canvas.getContext("2d");
         ctx.filter = 'blur(5px)';
+        const imageData = new ImageData(clampedArray, canvas.width, canvas.height)
+        ctx.putImageData(imageData, 0, 0);
+
+        return ctx.getImageData(0, 0, canvas.width, canvas.height).data
     }
 
-    ctx.drawImage(image, 0, 0);
+    return clampedArray;
+}
 
-    return ctx.getImageData(0, 0, image.width, image.height).data
+function base64ToClampedArray(base64: string): Uint8ClampedArray {
+    var binary_string = window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8ClampedArray(len);
+    for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
 }
 
 /**
