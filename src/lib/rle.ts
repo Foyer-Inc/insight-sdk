@@ -101,7 +101,7 @@ export const decode = (message: number[]): Uint8ClampedArray => {
     let isZero = true;
     for (let i = 0; i < message.length; i++) {
         for (let j = 0; j < message[i]; j++) {
-            imageArray.push(isZero ? 255 : 0);
+            imageArray.push(isZero ? 125 : 0);
         }
         // imageArray.push(...Array(message[i]).fill(isZero ? 0 : 255));
         isZero = !isZero;
@@ -118,7 +118,9 @@ export const decode = (message: number[]): Uint8ClampedArray => {
 export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
     let dataWithAdditionalLayers = [];
     for (let i = 0; i < data.length; i++) {
-        dataWithAdditionalLayers.push(...[data[i], data[i], data[i], 255]);
+        const value = data[i];
+        let items = [value, value, value, value === 0 ? 0 : 255]
+        dataWithAdditionalLayers.push(...items)
     }
     let image = new ImageData(
         new Uint8ClampedArray(dataWithAdditionalLayers),
