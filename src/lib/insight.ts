@@ -6,7 +6,7 @@ export class Insight {
     public force: boolean = false
     public includeSegmentations: boolean = false;
     public includeTagpoints: boolean = false;
-
+    public detectionsRequested: string[] = ['all'];
     private authorization?: string;
     public baseURL = 'http://localhost:5000'
     private classifyURL = this.baseURL + '/images/classify'
@@ -16,6 +16,7 @@ export class Insight {
         this.force = options.force ?? false
         this.includeSegmentations = options.includeSegmentations ?? false;
         this.includeTagpoints = options.includeTagpoints ?? false
+        this.detectionsRequested = options.detectionsRequested ?? ['all'];
     }
 
     /**
@@ -84,7 +85,8 @@ export class Insight {
         const payload: ClassifyPayload = {
             force: options.force ?? this.force,
             includeSegmentations: options.includeSegmentations ?? this.includeSegmentations,
-            includeTagpoints: options.includeTagpoints ?? this.includeTagpoints
+            includeTagpoints: options.includeTagpoints ?? this.includeTagpoints,
+            detectionsRequested: options.detectionsRequested ?? this.detectionsRequested
         }
 
         if (Array.isArray(files)) {

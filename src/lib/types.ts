@@ -5,6 +5,7 @@ export type InsightOptions = {
     force?: boolean;
     includeSegmentations?: boolean;
     includeTagpoints?: boolean;
+    detectionsRequested?: string[];
 }
 
 export type ClassifyPayload = {
@@ -15,6 +16,7 @@ export type ClassifyPayload = {
     force?: boolean;
     includeSegmentations?: boolean;
     includeTagpoints?: boolean;
+    detectionsRequested?: string[];
 }
 
 export type Classification = {
