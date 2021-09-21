@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import { checkStatus, resizeImage } from './helpers';
-import { InsightOptions, ClassifyPayload, ClassifyResult } from './types';
+import { ClassifyResult } from './results';
+import { InsightOptions, ClassifyPayload } from './types';
 
 export class Insight {
     public force: boolean = false

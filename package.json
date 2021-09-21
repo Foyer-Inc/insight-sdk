@@ -13,9 +13,7 @@
   "devDependencies": {},
   "scripts": {
     "prepare": "rm -rf ./build; tsc --build tsconfig.json",
-    "start": "node ./build/example/example.js",
     "build": "rm -rf ./build; tsc --build tsconfig.json",
-    "start_local": "rm -rf ./build; tsc --build tsconfig.json; node ./build/example/example.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Foyer Inc.",

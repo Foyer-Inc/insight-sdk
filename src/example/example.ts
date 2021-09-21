@@ -1,7 +1,12 @@
 import { Insight } from "..";
 import fs from 'fs'
 function main() {
-    const sdk = new Insight()
+    const sdk = new Insight(
+        {
+            authorization: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IDU0ODQsICJyZWFsbSI6ICJjb25zdW1lciIsICJpYXQiOjE2MDkyNzk5NTF9.lhUh6jZPRCT6wsPMUsuknWu7gLqMUl61AmZsJAg3TBs'
+        }
+    );
+    classifyImage()
 
     function classifyImage() {
         const image = fs.readFileSync("assets/kitchen.jpeg", { encoding: 'base64' })
@@ -14,7 +19,7 @@ function main() {
             .catch(console.error);
         sdk.classify(file, { includeTagpoints: true })
             .then((r) => {
-                console.log('includeTagpoints = false')
+                console.log('includeTagpoints = true')
                 console.log(r.detections)
             })
             .catch(console.error);
@@ -25,9 +30,5 @@ function main() {
             })
             .catch(console.error);
     }
-
-    sdk.login('demo@foyerapp.io', 'warme594')
-        .then(classifyImage)
-        .catch((error: Error) => console.error(error.message))
 }
 main()
