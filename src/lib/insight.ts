@@ -9,7 +9,7 @@ export class Insight {
     public includeTagpoints: boolean = false;
     public detectionsRequested: string[] = ['all'];
     private authorization?: string;
-    public baseURL = 'http://api.foyer.ai'
+    public baseURL = 'https://api.foyer.ai'
     private classifyURL = this.baseURL + '/images/classify'
 
     constructor(options: InsightOptions = {}) {
