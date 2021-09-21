@@ -97,12 +97,12 @@ async function getImageArray(originalImage: string, blur: boolean) {
     const bitmap = await createImageBitmap(blob)
 
     const canvas = document.createElement("canvas");
-    canvas.width = DEFAULT_WIDTH;
-    canvas.height = DEFAULT_WIDTH;
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
     var ctx = canvas.getContext("2d");
 
     if (blur) {
-        ctx.filter = 'blur(5px)';
+        ctx.filter = 'blur(10px)';
     }
 
     ctx.drawImage(bitmap, 0, 0)
