@@ -28,9 +28,18 @@ export function checkStatus(response: Response) {
  */
 export async function resizeImage(file: string, width?: number, height?: number): Promise<string> {
     let jimpImage = await jimp.read(Buffer.from(sanitizeBase64(file), 'base64'))
-    return jimpImage.resize(width ?? DEFAULT_WIDTH, height ?? DEFAULT_HEIGHT).getBase64Async(jimp.MIME_JPEG);
+    return jimpImage.resize(width ?? DEFAULT_WIDTH, height ?? DEFAULT_HEIGHT).getBase64Async(jimp.MIME_PNG);
 }
 
+export async function getImageSize(file: string): Promise<{ width: number, height: number }> {
+    let jimpImage = await jimp.read(Buffer.from(sanitizeBase64(file), 'base64'))
+    return { width: jimpImage.bitmap.width, height: jimpImage.bitmap.height }
+}
+/**
+ *
+ * @param file base64 encoded image
+ * @returns this is used to return the image without the data prefix, ex. needed when using Buffer.from
+ */
 export function sanitizeBase64(file: string) {
     if (file.startsWith('data')) {
         return file.split(',')[1]
@@ -40,31 +49,29 @@ export function sanitizeBase64(file: string) {
 }
 
 /**
- *
+ * Creates a base64 represenation of the detection segmentation of the same size as the original image
  * @param detection detection as returned from the model
+ * @param width width of the original image
+ * @param height height of the original image
  * @returns the detection mask as base64 encoded string
  */
-export async function makeMaskStringFromDetection(detection: Detection): Promise<string> {
+export async function makeMaskStringFromDetection(detection: Detection, width: number, height: number): Promise<string> {
     //create ImageData from segmentation to identify location of detection
     const { size, counts } = detection.segmentation;
     const mask = toMaskImageData(decode(rleFromString(counts)), size[0], size[1]);
-
     const b64 = imageDataToBase64(mask);
-
-    //for some reason the mask appears to be returned as a mirror of the original image
-    const buf = Buffer.from(b64, 'base64')
+    const buf = Buffer.from(sanitizeBase64(b64), 'base64')
     const jimpMask = await jimp.read(buf)
+    //for some reason the mask appears to be returned as a mirror of the original image
     jimpMask.rotate(-90)
     jimpMask.flip(true, false)
-
-    return await jimpMask.getBase64Async(jimp.MIME_PNG)
-
+    return jimpMask.resize(width, height).getBase64Async(jimp.MIME_PNG)
 }
 
 /**
- *
+ * This only works when called in a browser context
  * @param imageData ImageData represetation of bitmap used on canvas
- * @returns bsae64 string without mime type
+ * @returns bsae64 string with mime type
  */
 function imageDataToBase64(imageData: ImageData): string {
     //use canvas to create base64 respresentation of image mask
@@ -74,17 +81,17 @@ function imageDataToBase64(imageData: ImageData): string {
     var ctx = canvas.getContext("2d");
     ctx.putImageData(imageData, 0, 0);
 
-    return sanitizeBase64(canvas.toDataURL())
+    return canvas.toDataURL()
 }
 
 /**
- *
+ * This only works when called in a browser context
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
- * @returns return imagebitmap as Uint8ClampedArray
+ * @returns return image as Uint8ClampedArray
  */
 async function getImageArray(originalImage: string, blur: boolean) {
-    console.log(originalImage, blur);
+    //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
     const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
     const blob = new Blob([clampedArray])
     const bitmap = await createImageBitmap(blob)
@@ -105,25 +112,24 @@ async function getImageArray(originalImage: string, blur: boolean) {
 /**
  *
  * @param originalImage the original image as a base64 encoded string
- * @param mask the mask as a base64 encoded string
+ * @param mask the mask as a base64 encoded string with mime type
  */
 export async function applyBlur(originalImage: string, mask: string): Promise<string> {
     const maskArray = await getImageArray(mask, false);
-    console.log(maskArray)
     const imageArray = await getImageArray(originalImage, false);
-    console.log(imageArray)
     const blurredArray = await getImageArray(originalImage, true);
-    console.log(blurredArray)
     const length = imageArray.length
     const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
 
     for (let i = 0; i < length; i++) {
         destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : imageArray[i]
     }
-    console.log(destinationArray)
+
+    const { width, height } = await getImageSize(originalImage);
+
     return imageDataToBase64(new ImageData(
         destinationArray,
-        DEFAULT_WIDTH,
-        DEFAULT_WIDTH
+        width,
+        height
     ))
 }

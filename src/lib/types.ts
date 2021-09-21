@@ -43,3 +43,9 @@ export type ImageMetadata = {
     width: number;
     height: number;
 };
+
+export type ClassifyResponse = {
+    classifications: Classification[];
+    detections: Detection[];
+    metadata: ImageMetadata;
+}

@@ -9,7 +9,7 @@ export class Insight {
     public includeTagpoints: boolean = false;
     public detectionsRequested: string[] = ['all'];
     private authorization?: string;
-    public baseURL = 'http://localhost:5000'
+    public baseURL = 'http://api.foyer.ai'
     private classifyURL = this.baseURL + '/images/classify'
 
     constructor(options: InsightOptions = {}) {
@@ -62,9 +62,7 @@ export class Insight {
      * @throws can throw errors
      */
     public async classify(file: string, options: InsightOptions = {}): Promise<ClassifyResult> {
-        const resized = await resizeImage(file)
-
-        return await this.classifyRequest(resized, options) as ClassifyResult
+        return await this.classifyRequest(file, options) as ClassifyResult
 
     }
 
@@ -75,11 +73,7 @@ export class Insight {
      * @throws can throw errors
      */
     public async bulkClassify(files: string[], options: InsightOptions = {}): Promise<ClassifyResult[]> {
-        const resized = await Promise.all(
-            files.map(async (f: string) => await resizeImage(f))
-        );
-
-        return await this.classifyRequest(resized, options) as ClassifyResult[];
+        return await this.classifyRequest(files, options) as ClassifyResult[];
     }
 
     private async classifyRequest(files: string | string[], options: InsightOptions): Promise<ClassifyResult | ClassifyResult[]> {
@@ -91,9 +85,11 @@ export class Insight {
         }
 
         if (Array.isArray(files)) {
-            payload.files = files
+            payload.files = await Promise.all(
+                files.map(async (f: string) => await resizeImage(f))
+            );
         } else {
-            payload.file = files
+            payload.file = await resizeImage(files)
         }
 
         let response = await fetch(this.classifyURL, {
