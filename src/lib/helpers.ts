@@ -90,7 +90,7 @@ function imageDataToBase64(imageData: ImageData): string {
  * @param blur should the image be blurred before drawing
  * @returns return image as Uint8ClampedArray
  */
-async function getImageArray(originalImage: string, blur: boolean) {
+async function getImageArray(originalImage: string, blur: boolean = false) {
     //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
     const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
     const blob = new Blob([clampedArray])
@@ -114,15 +114,35 @@ async function getImageArray(originalImage: string, blur: boolean) {
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
  */
-export async function applyBlur(originalImage: string, mask: string): Promise<string> {
-    const maskArray = await getImageArray(mask, false);
-    const imageArray = await getImageArray(originalImage, false);
+export async function blur(originalImage: string, mask: string): Promise<string> {
+    const maskArray = await getImageArray(mask);
+    const imageArray = await getImageArray(originalImage);
     const blurredArray = await getImageArray(originalImage, true);
     const length = imageArray.length
     const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
 
     for (let i = 0; i < length; i++) {
         destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : imageArray[i]
+    }
+
+    const { width, height } = await getImageSize(originalImage);
+
+    return imageDataToBase64(new ImageData(
+        destinationArray,
+        width,
+        height
+    ))
+}
+
+export async function extract(originalImage: string, mask: string): Promise<string> {
+    const maskArray = await getImageArray(mask);
+    const imageArray = await getImageArray(originalImage);
+
+    const length = imageArray.length
+    const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
+
+    for (let i = 0; i < length; i++) {
+        destinationArray[i] = (maskArray[i] != 0) ? imageArray[i] : maskArray[i]
     }
 
     const { width, height } = await getImageSize(originalImage);
