@@ -1,7 +1,7 @@
 import { Response } from 'node-fetch';
 import jimp from 'jimp';
 import { toMaskImageData, decode, rleFromString } from './rle';
-import { Detection } from './types';
+import { ClassifyPayload, Detection } from '../types';
 
 const DEFAULT_HEIGHT = 512
 const DEFAULT_WIDTH = 512
@@ -19,6 +19,7 @@ export function checkStatus(response: Response) {
         throw new HTTPResponseError(response);
     }
 }
+
 /**
  *
  * @param file - base64 encoded image, with or without file type
@@ -46,6 +47,33 @@ export function sanitizeBase64(file: string) {
     }
 
     return file
+}
+
+/**
+ *
+ * @param images images to classify as base64 string, array of base64 strings, a url, or an array of urls
+ * @param payload the payload used as the body of a classify request, will have one and only one of file, files, url or urls property when returned
+ * @returns
+ */
+export async function addImagesToPayload(images: string | string[], payload: ClassifyPayload): Promise<ClassifyPayload> {
+    if (Array.isArray(images)) {
+        if (images[0].startsWith('data')) {
+            payload.files = await Promise.all(
+                images.map(async (f: string) => await resizeImage(f))
+            );
+        } else {
+            payload.urls = images;
+        }
+
+    } else {
+        if (images.startsWith('data')) {
+            payload.file = await resizeImage(images)
+        } else {
+            payload.url = images
+        }
+    }
+
+    return payload;
 }
 
 /**
@@ -113,6 +141,7 @@ async function getImageArray(originalImage: string, blur: boolean = false) {
  *
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
+ * @returns The original image with the requested detection blurred as base64 string
  */
 export async function blur(originalImage: string, mask: string): Promise<string> {
     const maskArray = await getImageArray(mask);
@@ -134,6 +163,12 @@ export async function blur(originalImage: string, mask: string): Promise<string>
     ))
 }
 
+/**
+ *
+ * @param originalImage the original image as a base64 encoded string
+ * @param mask the mask as a base64 encoded string with mime type
+ * @returns Image of the extracted detection with transparent background as base64 encoded string
+ */
 export async function extract(originalImage: string, mask: string): Promise<string> {
     const maskArray = await getImageArray(mask);
     const imageArray = await getImageArray(originalImage);

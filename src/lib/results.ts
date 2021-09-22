@@ -1,4 +1,4 @@
-import { blur, extract, getImageSize, makeMaskStringFromDetection } from "./helpers";
+import { blur, extract, getImageSize, makeMaskStringFromDetection } from "./utils/helpers";
 import { Classification, ClassifyResponse, Detection, ImageMetadata } from "./types";
 
 /**
@@ -48,13 +48,37 @@ export class ClassifyResult {
         }
     }
 
+    /**
+     * Check if a certain detection was returned for this image
+     * @param name name of the detection to find
+     * @returns true if detection was found and false otherwise
+     */
+    checkDetection(name: string): boolean {
+        return this.detections.findIndex((d: Detection) => d.class === name) !== -1
+    }
+
+    /**
+     *Check if an array of detections were returned for this image
+     * @param names array of names of detections to find
+     * @returns true if all detections are found, false otherwise
+     */
+    checkDetections(names: string[]): boolean {
+        for (let i = 0; i < names.length; i++) {
+            const n = names[i]
+            console.log(this.detections.findIndex((d: Detection) => d.class === n))
+            if (this.detections.findIndex((d: Detection) => d.class === n) === -1) {
+                return false
+            }
+        }
+        return true;
+    }
 
     /**
      * Internal function for decoding detection segmentation into base64 string
      * @param name the name of the detection to find
      * @returns the found detection as base64 string or an empty string
      */
-    async getDetectionMask(name: string): Promise<string> {
+    private async getDetectionMask(name: string): Promise<string> {
         let foundDetection = this.detections.find((d: Detection) => d.class === name)
 
         if (foundDetection && foundDetection.segmentation) {

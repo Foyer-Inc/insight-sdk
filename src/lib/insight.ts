@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { checkStatus, resizeImage } from './helpers';
+import { addImagesToPayload, checkStatus } from './utils/helpers';
 import { ClassifyResult } from './results';
 import { InsightOptions, ClassifyPayload } from './types';
 
@@ -56,41 +56,35 @@ export class Insight {
     }
 
     /**
-     * @param file - image encoded as base64 string
+     * @param image - image encoded as base64 string or as a url
      * @param options - can override class level properties
      * @returns classifications and detections
      * @throws can throw errors
      */
-    public async classify(file: string, options: InsightOptions = {}): Promise<ClassifyResult> {
-        return await this.classifyRequest(file, options) as ClassifyResult
+    public async classify(image: string, options: InsightOptions = {}): Promise<ClassifyResult> {
+        return await this.classifyRequest(image, options) as ClassifyResult
 
     }
 
     /**
-     * @param files - Array of images encoded as base64 strings
+     * @param images - Array of images encoded as base64 strings, must include data prefix, or urls, not both
      * @param options - can override class level properties
      * @returns classifications and detections
      * @throws can throw errors
      */
-    public async bulkClassify(files: string[], options: InsightOptions = {}): Promise<ClassifyResult[]> {
-        return await this.classifyRequest(files, options) as ClassifyResult[];
+    public async bulkClassify(images: string[], options: InsightOptions = {}): Promise<ClassifyResult[]> {
+        return await this.classifyRequest(images, options) as ClassifyResult[];
     }
 
-    private async classifyRequest(files: string | string[], options: InsightOptions): Promise<ClassifyResult | ClassifyResult[]> {
-        const payload: ClassifyPayload = {
+    private async classifyRequest(images: string | string[], options: InsightOptions): Promise<ClassifyResult | ClassifyResult[]> {
+        let payload: ClassifyPayload = {
             force: options.force ?? this.force,
             includeSegmentations: options.includeSegmentations ?? this.includeSegmentations,
             includeTagpoints: options.includeTagpoints ?? this.includeTagpoints,
             detectionsRequested: options.detectionsRequested ?? this.detectionsRequested
         }
 
-        if (Array.isArray(files)) {
-            payload.files = await Promise.all(
-                files.map(async (f: string) => await resizeImage(f))
-            );
-        } else {
-            payload.file = await resizeImage(files)
-        }
+        payload = await addImagesToPayload(images, payload);
 
         let response = await fetch(this.classifyURL, {
             method: 'POST',
@@ -106,9 +100,9 @@ export class Insight {
         const result = await response.json()
 
         if (Array.isArray(result)) {
-            return result.map((r: any, idx: number) => new ClassifyResult(files[idx], r))
+            return result.map((r: any, idx: number) => new ClassifyResult(images[idx], r))
         } else {
-            return new ClassifyResult(files as string, result);
+            return new ClassifyResult(images as string, result);
         }
     }
 }

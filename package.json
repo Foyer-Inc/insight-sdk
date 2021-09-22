@@ -14,7 +14,6 @@
   "scripts": {
     "prepare": "rm -rf ./build; tsc --build tsconfig.json",
     "build": "rm -rf ./build; tsc --build tsconfig.json",
-    "start_local": "rm -rf ./build; tsc --build tsconfig.json; node ./build/example/example.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Foyer Inc.",
