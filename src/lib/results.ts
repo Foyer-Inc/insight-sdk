@@ -1,9 +1,11 @@
+import fetch from 'node-fetch';
+import { getColor } from './utils/colorthief';
 import { blur, extract, getImageSize, makeMaskStringFromDetection } from "./utils/helpers";
 import { Classification, ClassifyResponse, Detection, ImageMetadata } from "./types";
 
 /**
  * Class representing the result from Insight
- * Contains the original image as a base64 string
+ * Contains the original image as initially passed to the classify endpoint
  * Contains the results of a successful call to the classify endpoint
  */
 export class ClassifyResult {
@@ -21,10 +23,11 @@ export class ClassifyResult {
 
     /**
      * This function serves to blur a particular detection in the image
-     * @param className the name of the detection to blur in the image, will only work if detection was returned with includeSegmentations=true
+     * @param name the name of the detection to blur in the image, will only work if detection was returned with includeSegmentations=true
      * @returns Image with detection blurred as base64 encoded string
      */
     async blurDetection(name: string): Promise<string> {
+        await this.updateImage()
         const mask = await this.getDetectionMask(name);
         if (mask) {
             return await blur(this.image, mask);
@@ -35,10 +38,11 @@ export class ClassifyResult {
 
     /**
      * This function serves to extract a particular detection in the image
-     * @param className the name of the detection to extract from the image, will only work if detection was returned with includeSegmentations=true
+     * @param name the name of the detection to extract from the image, will only work if detection was returned with includeSegmentations=true
      * @returns Image of the extracted detection with transparent background as base64 encoded string
      */
     async extractDetection(name: string): Promise<string> {
+        await this.updateImage()
         const mask = await this.getDetectionMask(name);
 
         if (mask) {
@@ -46,6 +50,23 @@ export class ClassifyResult {
         } else {
             throw new Error(`No detection with class: ${name} found`)
         }
+    }
+
+
+    /**
+     * This function returns the dominant color of a particular detection
+     * @param detection - the name of the detection to be isolated
+     * or a base64 encoded string of the mask already extracted by extractDetection
+     * @returns number array where [r, g, b] represents the color
+     */
+    async getDetectionColor(detection: string): Promise<number[]> {
+        let extractedMask: string;
+        if (detection.startsWith('data')) {
+            extractedMask = detection
+        } else {
+            extractedMask = await this.extractDetection(detection);
+        }
+        return await getColor(extractedMask)
     }
 
     /**
@@ -65,7 +86,6 @@ export class ClassifyResult {
     checkDetections(names: string[]): boolean {
         for (let i = 0; i < names.length; i++) {
             const n = names[i]
-            console.log(this.detections.findIndex((d: Detection) => d.class === n))
             if (this.detections.findIndex((d: Detection) => d.class === n) === -1) {
                 return false
             }
@@ -87,5 +107,17 @@ export class ClassifyResult {
         }
 
         return '';
+    }
+
+    /**
+     * Internal function to change image from url to a base64 encoded string
+     * for use in subsequent function calls
+     */
+    private async updateImage(): Promise<void> {
+        if (!this.image.startsWith('data')) {
+            const img = await fetch(this.image);
+            const buffer = await img.buffer();
+            this.image = buffer.toString('base64');
+        }
     }
 }

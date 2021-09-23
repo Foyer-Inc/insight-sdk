@@ -116,9 +116,9 @@ function imageDataToBase64(imageData: ImageData): string {
  * This only works when called in a browser context
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
- * @returns return image as Uint8ClampedArray
+ * @returns return image as ImageData
  */
-async function getImageArray(originalImage: string, blur: boolean = false) {
+export async function getImageData(originalImage: string, blur: boolean = false): Promise<ImageData> {
     //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
     const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
     const blob = new Blob([clampedArray])
@@ -134,7 +134,7 @@ async function getImageArray(originalImage: string, blur: boolean = false) {
     }
 
     ctx.drawImage(bitmap, 0, 0)
-    return ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 /**
@@ -144,17 +144,17 @@ async function getImageArray(originalImage: string, blur: boolean = false) {
  * @returns The original image with the requested detection blurred as base64 string
  */
 export async function blur(originalImage: string, mask: string): Promise<string> {
-    const maskArray = await getImageArray(mask);
-    const imageArray = await getImageArray(originalImage);
-    const blurredArray = await getImageArray(originalImage, true);
-    const length = imageArray.length
+    //get the components from the original image as ImageData
+    const { data, width, height } = await getImageData(originalImage);
+
+    const maskArray = (await getImageData(mask)).data;
+    const blurredArray = (await getImageData(originalImage, true)).data;
+    const length = width * height * 4
     const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
 
     for (let i = 0; i < length; i++) {
-        destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : imageArray[i]
+        destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : data[i]
     }
-
-    const { width, height } = await getImageSize(originalImage);
 
     return imageDataToBase64(new ImageData(
         destinationArray,
@@ -170,17 +170,16 @@ export async function blur(originalImage: string, mask: string): Promise<string>
  * @returns Image of the extracted detection with transparent background as base64 encoded string
  */
 export async function extract(originalImage: string, mask: string): Promise<string> {
-    const maskArray = await getImageArray(mask);
-    const imageArray = await getImageArray(originalImage);
+    //get the components from the original image as ImageData
+    const { data, width, height } = await getImageData(originalImage);
+    const maskArray = (await getImageData(mask)).data;
 
-    const length = imageArray.length
+    const length = width * height * 4
     const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
 
     for (let i = 0; i < length; i++) {
-        destinationArray[i] = (maskArray[i] != 0) ? imageArray[i] : maskArray[i]
+        destinationArray[i] = (maskArray[i] != 0) ? data[i] : maskArray[i]
     }
-
-    const { width, height } = await getImageSize(originalImage);
 
     return imageDataToBase64(new ImageData(
         destinationArray,
