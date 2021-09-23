@@ -26,8 +26,5 @@
   "bugs": {
     "url": "https://github.com/foyer-inc/insight-sdk/issues"
   },
-  "homepage": "https://github.com/foyer-inc/insight-sdk#readme",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  }
+  "homepage": "https://github.com/foyer-inc/insight-sdk#readme"
 }
