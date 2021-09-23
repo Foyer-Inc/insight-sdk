@@ -17,6 +17,14 @@
     "build": "rm -rf ./build; tsc --build tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Foyer Inc.",
-  "license": "ISC"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foyer-inc/insight-sdk.git"
+  },
+  "author": "Abram Villegas, Andrew Sidhu, Melanie Dworak, Nicolas Montanaro",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/foyer-inc/insight-sdk/issues"
+  },
+  "homepage": "https://github.com/foyer-inc/insight-sdk#readme"
 }

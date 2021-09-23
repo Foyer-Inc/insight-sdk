@@ -1,4 +1,5 @@
 # Foyer Insight
+[![npm](https://img.shields.io/npm/v/insight-sdk.svg)](https://www.npmjs.com/package/insight-sdk) [![MIT License](https://img.shields.io/github/license/Foyer-Inc/insight-sdk.svg)](https://github.com/Foyer-Inc/insight-sdk)
 ### Listed below is example usage of the insight-sdk
 ```js
 import { ClassifyResult, Insight } from "insight-sdk";
@@ -30,7 +31,7 @@ const options = {
 */
 const authorization = await insight.login('email', 'password')
 
-const url = 'https://myfakewebiste.com/myfakeimage.jpg'
+const url = 'https://myfakewebsite.com/myfakeimage.jpg'
 const file = //base 64 encoded string representation of image
 /*
 *Below are example calls to the classification service
@@ -59,4 +60,10 @@ const extractedImage = await result.extractDetection('detectionName')
 const color = await result.getDetectionColor('detectionName')
 //can also be passed the already extracted detection
 const anotherColor = await result.getDetectionColor(extractedImage)
+
+//also possible to check if a detection exists in the result
+//returns true or false if detection is present
+const found = result.checkDetection('detectionName')
+//returns true or false if all detections listed are present
+const multipleFound = result.checkDetection(['detectionName', 'anotherDetectionName'])
 ```
