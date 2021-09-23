@@ -1,5 +1,5 @@
-#Foyer Insight
-###Listed below is example usage of the insight-sdk
+# Foyer Insight
+### Listed below is example usage of the insight-sdk
 ```js
 import { ClassifyResult, Insight } from "insight-sdk";
 
