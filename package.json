@@ -1,5 +1,5 @@
 {
-  "name": "insight-sdk",
+  "name": "@foyer-inc/insight-sdk",
   "version": "1.0.2",
   "description": "SDK for connecting to Foyer's Insight service(s)",
   "main": "build/index.js",
@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/foyer-inc/insight-sdk/issues"
   },
-  "homepage": "https://github.com/foyer-inc/insight-sdk#readme"
+  "homepage": "https://github.com/foyer-inc/insight-sdk#readme",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
 }
