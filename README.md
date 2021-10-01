@@ -2,7 +2,7 @@
 [![npm](https://img.shields.io/npm/v/@foyer-inc/insight-sdk.svg)](https://www.npmjs.com/package/@foyer-inc/insight-sdk) [![MIT License](https://img.shields.io/github/license/Foyer-Inc/insight-sdk.svg)](https://github.com/Foyer-Inc/insight-sdk)
 ### Listed below is example usage of the insight-sdk
 ```js
-import { ClassifyResult, Insight } from "insight-sdk";
+import { ClassifyResult, Insight } from '@foyer-inc/insight-sdk'
 
 //can be initialized with authorization and other defaults or with nothing
 const insight = new Insight() or new Insight(options)
@@ -43,6 +43,9 @@ const result: ClassifyResult = await insight.classify(url)
 //Can include a variety of options
 //options provided will overrule those set on the insight instance
 const anotherResult: ClassifyResult = await insight.classify(url, options)
+
+//Can also send a bulk request with an array of urls or files
+const bulkResult: ClassifyResult[] = await insight.bulkClassify([url, url, url], options)
 
 insight.classify(url)
     .then( (result: ClassifyResult) => {
