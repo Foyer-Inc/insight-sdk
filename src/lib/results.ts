@@ -9,11 +9,32 @@ import { Classification, ClassifyResponse, Detection, ImageMetadata } from "./ty
  * Contains the results of a successful call to the classify endpoint
  */
 export class ClassifyResult {
+    /**
+     * The image as initially passed to the classify endpoint
+     * If was a url, will be changed to a base64 string for post processing functions
+     */
     image: string;
+    /**
+     * The classifications returned by the classify endpint
+     * See Classification interface for more information
+     */
     classifications: Classification[];
+    /**
+     * The detections returned by the classify endpint
+     * See Detection interface for more information
+     */
     detections: Detection[];
+    /**
+     * Metadata relating to the input image.
+     * See ImageMetadata interface for more information
+     */
     metadata: ImageMetadata
 
+    /**
+     * @constructor
+     * @param image the original image as initially passed to the classify endpoint
+     * @param response the results of a successful call to the classify endpoint
+     */
     constructor(image: string, response: ClassifyResponse) {
         this.image = image;
         this.classifications = response.classifications
@@ -26,7 +47,7 @@ export class ClassifyResult {
      * @param name the name of the detection to blur in the image, will only work if detection was returned with includeSegmentations=true
      * @returns Image with detection blurred as base64 encoded string
      */
-    async blurDetection(name: string): Promise<string> {
+    public async blurDetection(name: string): Promise<string> {
         await this.updateImage()
         const mask = await this.getDetectionMask(name);
         if (mask) {
@@ -41,7 +62,7 @@ export class ClassifyResult {
      * @param name the name of the detection to extract from the image, will only work if detection was returned with includeSegmentations=true
      * @returns Image of the extracted detection with transparent background as base64 encoded string
      */
-    async extractDetection(name: string): Promise<string> {
+    public async extractDetection(name: string): Promise<string> {
         await this.updateImage()
         const mask = await this.getDetectionMask(name);
 
@@ -59,7 +80,7 @@ export class ClassifyResult {
      * or a base64 encoded string of the mask already extracted by extractDetection
      * @returns number array where [r, g, b] represents the color
      */
-    async getDetectionColor(detection: string): Promise<number[]> {
+    public async getDetectionColor(detection: string): Promise<number[]> {
         let extractedMask: string;
         if (detection.startsWith('data')) {
             extractedMask = detection
@@ -74,7 +95,7 @@ export class ClassifyResult {
      * @param name name of the detection to find
      * @returns true if detection was found and false otherwise
      */
-    checkDetection(name: string): boolean {
+    public checkDetection(name: string): boolean {
         return this.detections.findIndex((d: Detection) => d.class === name) !== -1
     }
 
@@ -83,7 +104,7 @@ export class ClassifyResult {
      * @param names array of names of detections to find
      * @returns true if all detections are found, false otherwise
      */
-    checkDetections(names: string[]): boolean {
+    public checkDetections(names: string[]): boolean {
         for (let i = 0; i < names.length; i++) {
             const n = names[i]
             if (this.detections.findIndex((d: Detection) => d.class === n) === -1) {

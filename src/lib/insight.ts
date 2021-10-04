@@ -2,16 +2,49 @@ import fetch from 'node-fetch';
 import { addImagesToPayload, checkStatus } from './utils/helpers';
 import { ClassifyResult } from './results';
 import { InsightOptions, ClassifyPayload } from './types';
+import { ClassifyResponse } from '..';
 
+/**
+ * A class for sending requests to Foyer Insight services
+ */
 export class Insight {
-    public force: boolean = false
-    public includeSegmentations: boolean = false;
-    public includeTagpoints: boolean = false;
-    public detectionsRequested: string[] = ['all'];
+    /**
+     * An authorization token for Foyer Insight services
+     */
     private authorization?: string;
-    public baseURL = 'https://api.foyer.ai'
-    private classifyURL = this.baseURL + '/images/classify'
 
+    /**
+     * A flag requesting a new result even when cached data exists
+     * defaults to false
+     */
+    public force: boolean = false;
+
+    /**
+     * A flag requesting the segmentations property to be returned
+     * with each Detection, necessary for post processing
+     * defaults to false
+     */
+    public includeSegmentations: boolean = false;
+
+    /**
+     * A flag requesting the tagpoint attribute to be returned
+     * with each Detection
+     * defaults to false
+     */
+    public includeTagpoints: boolean = false;
+
+    /**
+     * An array of detections names to be returned in ClassifyResponse
+     * defaults to ['all'] for returning all available detections
+     */
+    public detectionsRequested: string[] = ['all'];
+
+    public baseURL = 'https://api.foyer.ai'
+
+    /**
+     * @constructor
+     * @param options see InsightOptions interface for more information
+     */
     constructor(options: InsightOptions = {}) {
         this.authorization = options.authorization
         this.force = options.force ?? false
@@ -86,7 +119,7 @@ export class Insight {
 
         payload = await addImagesToPayload(images, payload);
 
-        let response = await fetch(this.classifyURL, {
+        let response = await fetch(`${this.baseURL}/images/classify`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -100,7 +133,7 @@ export class Insight {
         const result = await response.json()
 
         if (Array.isArray(result)) {
-            return result.map((r: any, idx: number) => new ClassifyResult(images[idx], r))
+            return result.map((r: ClassifyResponse, idx: number) => new ClassifyResult(images[idx], r))
         } else {
             return new ClassifyResult(images as string, result);
         }

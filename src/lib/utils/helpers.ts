@@ -21,10 +21,10 @@ export function checkStatus(response: Response) {
 }
 
 /**
- *
+ * This function is used to resize the input image
  * @param file - base64 encoded image, with or without file type
- * @param width -
- * @param height
+ * @param width - desired width of output image, defaults to 512
+ * @param height - desired height of output image, defaults to 512
  * @returns resized image base64 encoded
  */
 export async function resizeImage(file: string, width?: number, height?: number): Promise<string> {
@@ -32,14 +32,20 @@ export async function resizeImage(file: string, width?: number, height?: number)
     return jimpImage.resize(width ?? DEFAULT_WIDTH, height ?? DEFAULT_HEIGHT).getBase64Async(jimp.MIME_PNG);
 }
 
+/**
+ * This function is used to find the width and height of an image
+ * @param file base64 encoded image, with or without file type
+ * @returns {width, height} height and width of input image
+ */
 export async function getImageSize(file: string): Promise<{ width: number, height: number }> {
     let jimpImage = await jimp.read(Buffer.from(sanitizeBase64(file), 'base64'))
     return { width: jimpImage.bitmap.width, height: jimpImage.bitmap.height }
 }
+
 /**
- *
+ * Some functions, ex: Buffer.from, only work without the data prefix
  * @param file base64 encoded image
- * @returns this is used to return the image without the data prefix, ex. needed when using Buffer.from
+ * @returns this is used to return the image without the data prefix
  */
 export function sanitizeBase64(file: string) {
     if (file.startsWith('data')) {
@@ -50,7 +56,7 @@ export function sanitizeBase64(file: string) {
 }
 
 /**
- *
+ * This function uses information about the images parameter to determine which payload property to set
  * @param images images to classify as base64 string, array of base64 strings, a url, or an array of urls
  * @param payload the payload used as the body of a classify request, will have one and only one of file, files, url or urls property when returned
  * @returns
