@@ -3,6 +3,7 @@ import jimp from 'jimp';
 import { toMaskImageData, decode, rleFromString } from './rle';
 import { ClassifyPayload, Detection } from '../types';
 
+const { Canvas, loadImage } = require('skia-canvas');
 const DEFAULT_HEIGHT = 512
 const DEFAULT_WIDTH = 512
 class HTTPResponseError extends Error {
@@ -109,10 +110,10 @@ export async function makeMaskStringFromDetection(detection: Detection, width: n
  */
 function imageDataToBase64(imageData: ImageData): string {
     //use canvas to create base64 respresentation of image mask
-    var canvas = document.createElement("canvas");
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-    var ctx = canvas.getContext("2d");
+    const { width, height } = imageData;
+    let canvas = new Canvas(width, height);
+    canvas.async = false
+    let ctx = canvas.getContext("2d");
     ctx.putImageData(imageData, 0, 0);
 
     return canvas.toDataURL()
@@ -126,20 +127,20 @@ function imageDataToBase64(imageData: ImageData): string {
  */
 export async function getImageData(originalImage: string, blur: boolean = false): Promise<ImageData> {
     //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
-    const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
-    const blob = new Blob([clampedArray])
-    const bitmap = await createImageBitmap(blob)
-
-    const canvas = document.createElement("canvas");
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
-    var ctx = canvas.getContext("2d");
+    // const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
+    // const blob = new Blob([clampedArray])
+    // const bitmap = await createImageBitmap(blob)
+    const image = await loadImage(originalImage);
+    const { width, height } = image;
+    const canvas = new Canvas(width, height);
+    canvas.async = false
+    let ctx = canvas.getContext("2d");
 
     if (blur) {
         ctx.filter = 'blur(10px)';
     }
 
-    ctx.drawImage(bitmap, 0, 0)
+    ctx.drawImage(image, 0, 0)
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
@@ -155,18 +156,19 @@ export async function blur(originalImage: string, mask: string): Promise<string>
 
     const maskArray = (await getImageData(mask)).data;
     const blurredArray = (await getImageData(originalImage, true)).data;
-    const length = width * height * 4
-    const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
 
-    for (let i = 0; i < length; i++) {
-        destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : data[i]
-    }
-
-    return imageDataToBase64(new ImageData(
-        destinationArray,
+    const canvas = new Canvas(width, height)
+    canvas.async = false
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.createImageData(
         width,
         height
-    ))
+    )
+
+    for (let i = 0; i < imageData.data.length; i++) {
+        imageData.data[i] = (maskArray[i] != 0) ? blurredArray[i] : data[i]
+    }
+    return imageDataToBase64(imageData)
 }
 
 /**
@@ -180,16 +182,17 @@ export async function extract(originalImage: string, mask: string): Promise<stri
     const { data, width, height } = await getImageData(originalImage);
     const maskArray = (await getImageData(mask)).data;
 
-    const length = width * height * 4
-    const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
-
-    for (let i = 0; i < length; i++) {
-        destinationArray[i] = (maskArray[i] != 0) ? data[i] : maskArray[i]
-    }
-
-    return imageDataToBase64(new ImageData(
-        destinationArray,
+    const canvas = new Canvas(width, height)
+    canvas.async = false
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.createImageData(
         width,
         height
-    ))
+    )
+
+    for (let i = 0; i < imageData.data.length; i++) {
+        imageData.data[i] = (maskArray[i] != 0) ? data[i] : maskArray[i]
+    }
+
+    return imageDataToBase64(imageData);
 }

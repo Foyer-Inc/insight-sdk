@@ -16,15 +16,39 @@ exports.Insight = void 0;
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const helpers_1 = require("./utils/helpers");
 const results_1 = require("./results");
+/**
+ * A class for sending requests to Foyer Insight services
+ */
 class Insight {
+    /**
+     * @constructor
+     * @param options see InsightOptions interface for more information
+     */
     constructor(options = {}) {
         var _a, _b, _c, _d;
+        /**
+         * A flag requesting a new result even when cached data exists
+         * defaults to false
+         */
         this.force = false;
+        /**
+         * A flag requesting the segmentations property to be returned
+         * with each Detection, necessary for post processing
+         * defaults to false
+         */
         this.includeSegmentations = false;
+        /**
+         * A flag requesting the tagpoint attribute to be returned
+         * with each Detection
+         * defaults to false
+         */
         this.includeTagpoints = false;
+        /**
+         * An array of detections names to be returned in ClassifyResponse
+         * defaults to ['all'] for returning all available detections
+         */
         this.detectionsRequested = ['all'];
         this.baseURL = 'https://api.foyer.ai';
-        this.classifyURL = this.baseURL + '/images/classify';
         this.authorization = options.authorization;
         this.force = (_a = options.force) !== null && _a !== void 0 ? _a : false;
         this.includeSegmentations = (_b = options.includeSegmentations) !== null && _b !== void 0 ? _b : false;
@@ -93,7 +117,7 @@ class Insight {
                 detectionsRequested: (_d = options.detectionsRequested) !== null && _d !== void 0 ? _d : this.detectionsRequested
             };
             payload = yield (0, helpers_1.addImagesToPayload)(images, payload);
-            let response = yield (0, node_fetch_1.default)(this.classifyURL, {
+            let response = yield (0, node_fetch_1.default)(`${this.baseURL}/images/classify`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

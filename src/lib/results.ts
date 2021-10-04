@@ -138,7 +138,7 @@ export class ClassifyResult {
         if (!this.image.startsWith('data')) {
             const img = await fetch(this.image);
             const buffer = await img.buffer();
-            this.image = buffer.toString('base64');
+            this.image = `data:${img.headers.get('content-type')};base64,${buffer.toString('base64')}`;
         }
     }
 }

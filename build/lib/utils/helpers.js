@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.extract = exports.blur = exports.getImageData = exports.makeMaskStringFromDetection = exports.addImagesToPayload = exports.sanitizeBase64 = exports.getImageSize = exports.resizeImage = exports.checkStatus = void 0;
 const jimp_1 = __importDefault(require("jimp"));
 const rle_1 = require("./rle");
+const { Canvas, loadImage } = require('skia-canvas');
 const DEFAULT_HEIGHT = 512;
 const DEFAULT_WIDTH = 512;
 class HTTPResponseError extends Error {
@@ -33,10 +34,10 @@ function checkStatus(response) {
 }
 exports.checkStatus = checkStatus;
 /**
- *
+ * This function is used to resize the input image
  * @param file - base64 encoded image, with or without file type
- * @param width -
- * @param height
+ * @param width - desired width of output image, defaults to 512
+ * @param height - desired height of output image, defaults to 512
  * @returns resized image base64 encoded
  */
 function resizeImage(file, width, height) {
@@ -46,6 +47,11 @@ function resizeImage(file, width, height) {
     });
 }
 exports.resizeImage = resizeImage;
+/**
+ * This function is used to find the width and height of an image
+ * @param file base64 encoded image, with or without file type
+ * @returns {width, height} height and width of input image
+ */
 function getImageSize(file) {
     return __awaiter(this, void 0, void 0, function* () {
         let jimpImage = yield jimp_1.default.read(Buffer.from(sanitizeBase64(file), 'base64'));
@@ -54,9 +60,9 @@ function getImageSize(file) {
 }
 exports.getImageSize = getImageSize;
 /**
- *
+ * Some functions, ex: Buffer.from, only work without the data prefix
  * @param file base64 encoded image
- * @returns this is used to return the image without the data prefix, ex. needed when using Buffer.from
+ * @returns this is used to return the image without the data prefix
  */
 function sanitizeBase64(file) {
     if (file.startsWith('data')) {
@@ -66,7 +72,7 @@ function sanitizeBase64(file) {
 }
 exports.sanitizeBase64 = sanitizeBase64;
 /**
- *
+ * This function uses information about the images parameter to determine which payload property to set
  * @param images images to classify as base64 string, array of base64 strings, a url, or an array of urls
  * @param payload the payload used as the body of a classify request, will have one and only one of file, files, url or urls property when returned
  * @returns
@@ -122,10 +128,10 @@ exports.makeMaskStringFromDetection = makeMaskStringFromDetection;
  */
 function imageDataToBase64(imageData) {
     //use canvas to create base64 respresentation of image mask
-    var canvas = document.createElement("canvas");
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-    var ctx = canvas.getContext("2d");
+    const { width, height } = imageData;
+    let canvas = new Canvas(width, height);
+    canvas.async = false;
+    let ctx = canvas.getContext("2d");
     ctx.putImageData(imageData, 0, 0);
     return canvas.toDataURL();
 }
@@ -138,17 +144,18 @@ function imageDataToBase64(imageData) {
 function getImageData(originalImage, blur = false) {
     return __awaiter(this, void 0, void 0, function* () {
         //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
-        const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
-        const blob = new Blob([clampedArray]);
-        const bitmap = yield createImageBitmap(blob);
-        const canvas = document.createElement("canvas");
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        var ctx = canvas.getContext("2d");
+        // const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
+        // const blob = new Blob([clampedArray])
+        // const bitmap = await createImageBitmap(blob)
+        const image = yield loadImage(originalImage);
+        const { width, height } = image;
+        const canvas = new Canvas(width, height);
+        canvas.async = false;
+        let ctx = canvas.getContext("2d");
         if (blur) {
             ctx.filter = 'blur(10px)';
         }
-        ctx.drawImage(bitmap, 0, 0);
+        ctx.drawImage(image, 0, 0);
         return ctx.getImageData(0, 0, canvas.width, canvas.height);
     });
 }
@@ -165,12 +172,14 @@ function blur(originalImage, mask) {
         const { data, width, height } = yield getImageData(originalImage);
         const maskArray = (yield getImageData(mask)).data;
         const blurredArray = (yield getImageData(originalImage, true)).data;
-        const length = width * height * 4;
-        const destinationArray = new Uint8ClampedArray(length);
-        for (let i = 0; i < length; i++) {
-            destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : data[i];
+        const canvas = new Canvas(width, height);
+        canvas.async = false;
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.createImageData(width, height);
+        for (let i = 0; i < imageData.data.length; i++) {
+            imageData.data[i] = (maskArray[i] != 0) ? blurredArray[i] : data[i];
         }
-        return imageDataToBase64(new ImageData(destinationArray, width, height));
+        return imageDataToBase64(imageData);
     });
 }
 exports.blur = blur;
@@ -185,12 +194,14 @@ function extract(originalImage, mask) {
         //get the components from the original image as ImageData
         const { data, width, height } = yield getImageData(originalImage);
         const maskArray = (yield getImageData(mask)).data;
-        const length = width * height * 4;
-        const destinationArray = new Uint8ClampedArray(length);
-        for (let i = 0; i < length; i++) {
-            destinationArray[i] = (maskArray[i] != 0) ? data[i] : maskArray[i];
+        const canvas = new Canvas(width, height);
+        canvas.async = false;
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.createImageData(width, height);
+        for (let i = 0; i < imageData.data.length; i++) {
+            imageData.data[i] = (maskArray[i] != 0) ? data[i] : maskArray[i];
         }
-        return imageDataToBase64(new ImageData(destinationArray, width, height));
+        return imageDataToBase64(imageData);
     });
 }
 exports.extract = extract;

@@ -1,13 +1,40 @@
 import { ClassifyResult } from './results';
 import { InsightOptions } from './types';
+/**
+ * A class for sending requests to Foyer Insight services
+ */
 export declare class Insight {
-    force: boolean;
-    includeSegmentations: boolean;
-    includeTagpoints: boolean;
-    detectionsRequested: string[];
+    /**
+     * An authorization token for Foyer Insight services
+     */
     private authorization?;
+    /**
+     * A flag requesting a new result even when cached data exists
+     * defaults to false
+     */
+    force: boolean;
+    /**
+     * A flag requesting the segmentations property to be returned
+     * with each Detection, necessary for post processing
+     * defaults to false
+     */
+    includeSegmentations: boolean;
+    /**
+     * A flag requesting the tagpoint attribute to be returned
+     * with each Detection
+     * defaults to false
+     */
+    includeTagpoints: boolean;
+    /**
+     * An array of detections names to be returned in ClassifyResponse
+     * defaults to ['all'] for returning all available detections
+     */
+    detectionsRequested: string[];
     baseURL: string;
-    private classifyURL;
+    /**
+     * @constructor
+     * @param options see InsightOptions interface for more information
+     */
     constructor(options?: InsightOptions);
     /**
      *

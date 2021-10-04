@@ -26,6 +26,7 @@
  * @author Vlad Vinogradov <vladvin@eora.ru>
 */
 
+const { Canvas } = require('skia-canvas');
 
 /**
  * Translate similar to LEB128 but using 6 bits/char and ascii chars 48-111-like string to RLE encoded array.
@@ -116,15 +117,20 @@ export const decode = (message: number[]): Uint8ClampedArray => {
  * @returns {Array} Returns sequence of bits
  */
 export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
-    let dataWithAdditionalLayers = [];
+    const canvas = new Canvas(w, h)
+    canvas.async = false
+    let ctx = canvas.getContext("2d");
+    let image = ctx.createImageData(w, h);
+
     for (let i = 0; i < data.length; i++) {
-        dataWithAdditionalLayers.push(...[data[i], data[i], data[i], data[i]])
+        const value = data[i]
+        const pixelIndex = i * 4
+
+        image.data[pixelIndex] = value;
+        image.data[pixelIndex + 1] = value;
+        image.data[pixelIndex + 2] = value;
+        image.data[pixelIndex + 3] = value;
     }
 
-    let image = new ImageData(
-        new Uint8ClampedArray(dataWithAdditionalLayers),
-        w,
-        h
-    );
     return image;
 };
