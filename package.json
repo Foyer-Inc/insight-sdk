@@ -4,6 +4,10 @@
   "description": "SDK for connecting to Foyer's Insight service(s)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "browser": {
+    "build/lib/utils/helpers.js": "build/lib/utils/helpers-browser.js",
+    "build/lib/utils/rle.js": "build/lib/utils/rle-browser.js"
+  },
   "dependencies": {
     "@types/node-fetch": "^2.5.8",
     "jimp": "^0.16.1",
@@ -16,7 +20,6 @@
     "@types/node": "^16.10.2"
   },
   "scripts": {
-    "prepare": "rm -rf ./build; tsc --build tsconfig.json",
     "build": "rm -rf ./build; tsc --build tsconfig.json",
     "test": "rm -rf ./build; tsc --build tsconfig.json; node ./build/example/example.js"
   },
