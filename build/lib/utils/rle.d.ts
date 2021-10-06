@@ -36,9 +36,10 @@ export declare const encode: (imageArray: Uint8ClampedArray) => number[];
  */
 export declare const decode: (message: number[]) => Uint8ClampedArray;
 /**
- * Creates imageData from array of bits.
- * @example
- * ([0, 0, 0, 0], 2, 2) -> ImageData
- * @returns {Array} Returns sequence of bits
+ *
+ * @param data the image mask as an Uint8 array
+ * @param w width of the input data
+ * @param h height of the input data
+ * @returns an ImageData instance
  */
 export declare const toMaskImageData: (data: Uint8ClampedArray, w: number, h: number) => ImageData;

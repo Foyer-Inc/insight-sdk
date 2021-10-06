@@ -111,12 +111,29 @@ export const decode = (message: number[]): Uint8ClampedArray => {
 };
 
 /**
+ *
+ * @param data the image mask as an Uint8 array
+ * @param w width of the input data
+ * @param h height of the input data
+ * @returns an ImageData instance
+ */
+export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
+    const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
+    if (isBrowser) {
+        return toMaskImageDataBrowser(data, w, h)
+    }
+
+    return toMaskImageDataNode(data, w, h);
+}
+
+/**
  * Creates imageData from array of bits.
  * @example
  * ([0, 0, 0, 0], 2, 2) -> ImageData
- * @returns {Array} Returns sequence of bits
+ * @returns returns an ImageData instance
  */
-export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
+const toMaskImageDataNode = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
     const canvas = new Canvas(w, h)
     canvas.async = false
     let ctx = canvas.getContext("2d");
@@ -132,5 +149,25 @@ export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): 
         image.data[pixelIndex + 3] = value;
     }
 
+    return image;
+};
+
+/**
+ * Creates imageData from array of bits.
+ * @example
+ * ([0, 0, 0, 0], 2, 2) -> ImageData
+ * @returns an ImageData instance
+ */
+const toMaskImageDataBrowser = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
+    let dataWithAdditionalLayers = [];
+    for (let i = 0; i < data.length; i++) {
+        dataWithAdditionalLayers.push(...[data[i], data[i], data[i], data[i]])
+    }
+
+    let image = new ImageData(
+        new Uint8ClampedArray(dataWithAdditionalLayers),
+        w,
+        h
+    );
     return image;
 };

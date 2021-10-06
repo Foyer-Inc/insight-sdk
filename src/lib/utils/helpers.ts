@@ -6,6 +6,7 @@ import { ClassifyPayload, Detection } from '../types';
 const { Canvas, loadImage } = require('skia-canvas');
 const DEFAULT_HEIGHT = 512
 const DEFAULT_WIDTH = 512
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 class HTTPResponseError extends Error {
     constructor(response: Response) {
         super(`HTTP Error Response: ${response.status} ${response.statusText}`);
@@ -111,8 +112,7 @@ export async function makeMaskStringFromDetection(detection: Detection, width: n
 function imageDataToBase64(imageData: ImageData): string {
     //use canvas to create base64 respresentation of image mask
     const { width, height } = imageData;
-    let canvas = new Canvas(width, height);
-    canvas.async = false
+    const canvas = resolveCanvas(width, height)
     let ctx = canvas.getContext("2d");
     ctx.putImageData(imageData, 0, 0);
 
@@ -120,20 +120,24 @@ function imageDataToBase64(imageData: ImageData): string {
 }
 
 /**
- * This only works when called in a browser context
+ *
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
  * @returns return image as ImageData
  */
 export async function getImageData(originalImage: string, blur: boolean = false): Promise<ImageData> {
     //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
-    // const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
-    // const blob = new Blob([clampedArray])
-    // const bitmap = await createImageBitmap(blob)
-    const image = await loadImage(originalImage);
+    let image: any;
+    if (isBrowser) {
+        const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
+        const blob = new Blob([clampedArray])
+        image = await createImageBitmap(blob)
+    } else {
+        image = await loadImage(originalImage);
+    }
+
     const { width, height } = image;
-    const canvas = new Canvas(width, height);
-    canvas.async = false
+    const canvas = resolveCanvas(width, height);
     let ctx = canvas.getContext("2d");
 
     if (blur) {
@@ -157,8 +161,7 @@ export async function blur(originalImage: string, mask: string): Promise<string>
     const maskArray = (await getImageData(mask)).data;
     const blurredArray = (await getImageData(originalImage, true)).data;
 
-    const canvas = new Canvas(width, height)
-    canvas.async = false
+    const canvas = resolveCanvas(width, height)
     const ctx = canvas.getContext("2d");
     const imageData = ctx.createImageData(
         width,
@@ -182,8 +185,7 @@ export async function extract(originalImage: string, mask: string): Promise<stri
     const { data, width, height } = await getImageData(originalImage);
     const maskArray = (await getImageData(mask)).data;
 
-    const canvas = new Canvas(width, height)
-    canvas.async = false
+    const canvas = resolveCanvas(width, height)
     const ctx = canvas.getContext("2d");
     const imageData = ctx.createImageData(
         width,
@@ -195,4 +197,19 @@ export async function extract(originalImage: string, mask: string): Promise<stri
     }
 
     return imageDataToBase64(imageData);
+}
+
+
+function resolveCanvas(width: number, height: number): any {
+    let canvas: any;
+    if (isBrowser) {
+        canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+    } else {
+        canvas = new Canvas(width, height)
+        canvas.async = false
+    }
+
+    return canvas;
 }

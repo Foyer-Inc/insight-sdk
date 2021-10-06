@@ -5,8 +5,7 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "browser": {
-    "build/lib/utils/helpers.js": "build/lib/utils/helpers-browser.js",
-    "build/lib/utils/rle.js": "build/lib/utils/rle-browser.js"
+    "skia-canvas": false
   },
   "dependencies": {
     "@types/node-fetch": "^2.5.8",
@@ -20,8 +19,8 @@
     "@types/node": "^16.10.2"
   },
   "scripts": {
-    "build": "rm -rf ./build; tsc --build tsconfig.json",
-    "test": "rm -rf ./build; tsc --build tsconfig.json; node ./build/example/example.js"
+    "prepare": "rm -rf ./build; tsc --build tsconfig.json",
+    "build": "rm -rf ./build; tsc --build tsconfig.json"
   },
   "repository": {
     "type": "git",

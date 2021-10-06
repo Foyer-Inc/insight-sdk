@@ -18,6 +18,7 @@ const rle_1 = require("./rle");
 const { Canvas, loadImage } = require('skia-canvas');
 const DEFAULT_HEIGHT = 512;
 const DEFAULT_WIDTH = 512;
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 class HTTPResponseError extends Error {
     constructor(response) {
         super(`HTTP Error Response: ${response.status} ${response.statusText}`);
@@ -129,14 +130,13 @@ exports.makeMaskStringFromDetection = makeMaskStringFromDetection;
 function imageDataToBase64(imageData) {
     //use canvas to create base64 respresentation of image mask
     const { width, height } = imageData;
-    let canvas = new Canvas(width, height);
-    canvas.async = false;
+    const canvas = resolveCanvas(width, height);
     let ctx = canvas.getContext("2d");
     ctx.putImageData(imageData, 0, 0);
     return canvas.toDataURL();
 }
 /**
- * This only works when called in a browser context
+ *
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
  * @returns return image as ImageData
@@ -144,13 +144,17 @@ function imageDataToBase64(imageData) {
 function getImageData(originalImage, blur = false) {
     return __awaiter(this, void 0, void 0, function* () {
         //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
-        // const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
-        // const blob = new Blob([clampedArray])
-        // const bitmap = await createImageBitmap(blob)
-        const image = yield loadImage(originalImage);
+        let image;
+        if (isBrowser) {
+            const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
+            const blob = new Blob([clampedArray]);
+            image = yield createImageBitmap(blob);
+        }
+        else {
+            image = yield loadImage(originalImage);
+        }
         const { width, height } = image;
-        const canvas = new Canvas(width, height);
-        canvas.async = false;
+        const canvas = resolveCanvas(width, height);
         let ctx = canvas.getContext("2d");
         if (blur) {
             ctx.filter = 'blur(10px)';
@@ -172,8 +176,7 @@ function blur(originalImage, mask) {
         const { data, width, height } = yield getImageData(originalImage);
         const maskArray = (yield getImageData(mask)).data;
         const blurredArray = (yield getImageData(originalImage, true)).data;
-        const canvas = new Canvas(width, height);
-        canvas.async = false;
+        const canvas = resolveCanvas(width, height);
         const ctx = canvas.getContext("2d");
         const imageData = ctx.createImageData(width, height);
         for (let i = 0; i < imageData.data.length; i++) {
@@ -194,8 +197,7 @@ function extract(originalImage, mask) {
         //get the components from the original image as ImageData
         const { data, width, height } = yield getImageData(originalImage);
         const maskArray = (yield getImageData(mask)).data;
-        const canvas = new Canvas(width, height);
-        canvas.async = false;
+        const canvas = resolveCanvas(width, height);
         const ctx = canvas.getContext("2d");
         const imageData = ctx.createImageData(width, height);
         for (let i = 0; i < imageData.data.length; i++) {
@@ -205,4 +207,17 @@ function extract(originalImage, mask) {
     });
 }
 exports.extract = extract;
+function resolveCanvas(width, height) {
+    let canvas;
+    if (isBrowser) {
+        canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+    }
+    else {
+        canvas = new Canvas(width, height);
+        canvas.async = false;
+    }
+    return canvas;
+}
 //# sourceMappingURL=helpers.js.map

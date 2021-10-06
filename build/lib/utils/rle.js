@@ -110,12 +110,27 @@ const decode = (message) => {
 };
 exports.decode = decode;
 /**
+ *
+ * @param data the image mask as an Uint8 array
+ * @param w width of the input data
+ * @param h height of the input data
+ * @returns an ImageData instance
+ */
+const toMaskImageData = (data, w, h) => {
+    const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+    if (isBrowser) {
+        return toMaskImageDataBrowser(data, w, h);
+    }
+    return toMaskImageDataNode(data, w, h);
+};
+exports.toMaskImageData = toMaskImageData;
+/**
  * Creates imageData from array of bits.
  * @example
  * ([0, 0, 0, 0], 2, 2) -> ImageData
- * @returns {Array} Returns sequence of bits
+ * @returns returns an ImageData instance
  */
-const toMaskImageData = (data, w, h) => {
+const toMaskImageDataNode = (data, w, h) => {
     const canvas = new Canvas(w, h);
     canvas.async = false;
     let ctx = canvas.getContext("2d");
@@ -130,5 +145,18 @@ const toMaskImageData = (data, w, h) => {
     }
     return image;
 };
-exports.toMaskImageData = toMaskImageData;
+/**
+ * Creates imageData from array of bits.
+ * @example
+ * ([0, 0, 0, 0], 2, 2) -> ImageData
+ * @returns an ImageData instance
+ */
+const toMaskImageDataBrowser = (data, w, h) => {
+    let dataWithAdditionalLayers = [];
+    for (let i = 0; i < data.length; i++) {
+        dataWithAdditionalLayers.push(...[data[i], data[i], data[i], data[i]]);
+    }
+    let image = new ImageData(new Uint8ClampedArray(dataWithAdditionalLayers), w, h);
+    return image;
+};
 //# sourceMappingURL=rle.js.map

@@ -40,7 +40,7 @@ export declare function addImagesToPayload(images: string | string[], payload: C
  */
 export declare function makeMaskStringFromDetection(detection: Detection, width: number, height: number): Promise<string>;
 /**
- * This only works when called in a browser context
+ *
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
  * @returns return image as ImageData
