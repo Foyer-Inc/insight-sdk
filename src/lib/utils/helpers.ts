@@ -105,7 +105,7 @@ export async function makeMaskStringFromDetection(detection: Detection, width: n
 }
 
 /**
- * This only works when called in a browser context
+ * Transforms an ImageData instance to a base64 encoded string
  * @param imageData ImageData represetation of bitmap used on canvas
  * @returns bsae64 string with mime type
  */
@@ -120,15 +120,15 @@ function imageDataToBase64(imageData: ImageData): string {
 }
 
 /**
- *
+ * Transform a base64 encoded string into an ImageData instance
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
  * @returns return image as ImageData
  */
 export async function getImageData(originalImage: string, blur: boolean = false): Promise<ImageData> {
-    //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
     let image: any;
     if (isBrowser) {
+        //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
         const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
         const blob = new Blob([clampedArray])
         image = await createImageBitmap(blob)
@@ -149,7 +149,7 @@ export async function getImageData(originalImage: string, blur: boolean = false)
 }
 
 /**
- *
+ * This function returns the image with a detection blurred
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
  * @returns The original image with the requested detection blurred as base64 string
@@ -175,7 +175,7 @@ export async function blur(originalImage: string, mask: string): Promise<string>
 }
 
 /**
- *
+ * This functions returns an image of an isolated detection
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
  * @returns Image of the extracted detection with transparent background as base64 encoded string
@@ -199,7 +199,12 @@ export async function extract(originalImage: string, mask: string): Promise<stri
     return imageDataToBase64(imageData);
 }
 
-
+/**
+ * Returns an appropriate canvas for the environment
+ * @param width width of canvas to create
+ * @param height height of canvas to create
+ * @returns a canvas for drawing images
+ */
 function resolveCanvas(width: number, height: number): any {
     let canvas: any;
     if (isBrowser) {

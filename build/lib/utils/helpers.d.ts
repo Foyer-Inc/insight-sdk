@@ -40,21 +40,21 @@ export declare function addImagesToPayload(images: string | string[], payload: C
  */
 export declare function makeMaskStringFromDetection(detection: Detection, width: number, height: number): Promise<string>;
 /**
- *
+ * Transform a base64 encoded string into an ImageData instance
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
  * @returns return image as ImageData
  */
 export declare function getImageData(originalImage: string, blur?: boolean): Promise<ImageData>;
 /**
- *
+ * This function returns the image with a detection blurred
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
  * @returns The original image with the requested detection blurred as base64 string
  */
 export declare function blur(originalImage: string, mask: string): Promise<string>;
 /**
- *
+ * This functions returns an image of an isolated detection
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
  * @returns Image of the extracted detection with transparent background as base64 encoded string

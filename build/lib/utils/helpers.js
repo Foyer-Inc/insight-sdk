@@ -123,7 +123,7 @@ function makeMaskStringFromDetection(detection, width, height) {
 }
 exports.makeMaskStringFromDetection = makeMaskStringFromDetection;
 /**
- * This only works when called in a browser context
+ * Transforms an ImageData instance to a base64 encoded string
  * @param imageData ImageData represetation of bitmap used on canvas
  * @returns bsae64 string with mime type
  */
@@ -136,16 +136,16 @@ function imageDataToBase64(imageData) {
     return canvas.toDataURL();
 }
 /**
- *
+ * Transform a base64 encoded string into an ImageData instance
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
  * @returns return image as ImageData
  */
 function getImageData(originalImage, blur = false) {
     return __awaiter(this, void 0, void 0, function* () {
-        //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
         let image;
         if (isBrowser) {
+            //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
             const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
             const blob = new Blob([clampedArray]);
             image = yield createImageBitmap(blob);
@@ -165,7 +165,7 @@ function getImageData(originalImage, blur = false) {
 }
 exports.getImageData = getImageData;
 /**
- *
+ * This function returns the image with a detection blurred
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
  * @returns The original image with the requested detection blurred as base64 string
@@ -187,7 +187,7 @@ function blur(originalImage, mask) {
 }
 exports.blur = blur;
 /**
- *
+ * This functions returns an image of an isolated detection
  * @param originalImage the original image as a base64 encoded string
  * @param mask the mask as a base64 encoded string with mime type
  * @returns Image of the extracted detection with transparent background as base64 encoded string
@@ -207,6 +207,12 @@ function extract(originalImage, mask) {
     });
 }
 exports.extract = extract;
+/**
+ * Returns an appropriate canvas for the environment
+ * @param width width of canvas to create
+ * @param height height of canvas to create
+ * @returns a canvas for drawing images
+ */
 function resolveCanvas(width, height) {
     let canvas;
     if (isBrowser) {
