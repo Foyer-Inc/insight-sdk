@@ -4,18 +4,23 @@
   "description": "SDK for connecting to Foyer's Insight service(s)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "browser": {
+    "skia-canvas": false
+  },
   "dependencies": {
     "@types/node-fetch": "^2.5.8",
     "jimp": "^0.16.1",
     "node-fetch": "^2.6.1",
     "quantize": "^1.0.2",
+    "skia-canvas": "^0.9.25",
     "typescript": "^4.4.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/node": "^16.10.2"
+  },
   "scripts": {
-    "prepare": "rm -rf ./build; tsc --build tsconfig.json",
-    "build": "rm -rf ./build; tsc --build tsconfig.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublishOnly": "rm -rf ./build; tsc --build tsconfig.json",
+    "build": "rm -rf ./build; tsc --build tsconfig.json"
   },
   "repository": {
     "type": "git",

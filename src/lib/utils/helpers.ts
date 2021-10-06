@@ -3,8 +3,10 @@ import jimp from 'jimp';
 import { toMaskImageData, decode, rleFromString } from './rle';
 import { ClassifyPayload, Detection } from '../types';
 
+const { Canvas, loadImage } = require('skia-canvas');
 const DEFAULT_HEIGHT = 512
 const DEFAULT_WIDTH = 512
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 class HTTPResponseError extends Error {
     constructor(response: Response) {
         super(`HTTP Error Response: ${response.status} ${response.statusText}`);
@@ -21,10 +23,10 @@ export function checkStatus(response: Response) {
 }
 
 /**
- *
+ * This function is used to resize the input image
  * @param file - base64 encoded image, with or without file type
- * @param width -
- * @param height
+ * @param width - desired width of output image, defaults to 512
+ * @param height - desired height of output image, defaults to 512
  * @returns resized image base64 encoded
  */
 export async function resizeImage(file: string, width?: number, height?: number): Promise<string> {
@@ -32,14 +34,20 @@ export async function resizeImage(file: string, width?: number, height?: number)
     return jimpImage.resize(width ?? DEFAULT_WIDTH, height ?? DEFAULT_HEIGHT).getBase64Async(jimp.MIME_PNG);
 }
 
+/**
+ * This function is used to find the width and height of an image
+ * @param file base64 encoded image, with or without file type
+ * @returns {width, height} height and width of input image
+ */
 export async function getImageSize(file: string): Promise<{ width: number, height: number }> {
     let jimpImage = await jimp.read(Buffer.from(sanitizeBase64(file), 'base64'))
     return { width: jimpImage.bitmap.width, height: jimpImage.bitmap.height }
 }
+
 /**
- *
+ * Some functions, ex: Buffer.from, only work without the data prefix
  * @param file base64 encoded image
- * @returns this is used to return the image without the data prefix, ex. needed when using Buffer.from
+ * @returns this is used to return the image without the data prefix
  */
 export function sanitizeBase64(file: string) {
     if (file.startsWith('data')) {
@@ -50,7 +58,7 @@ export function sanitizeBase64(file: string) {
 }
 
 /**
- *
+ * This function uses information about the images parameter to determine which payload property to set
  * @param images images to classify as base64 string, array of base64 strings, a url, or an array of urls
  * @param payload the payload used as the body of a classify request, will have one and only one of file, files, url or urls property when returned
  * @returns
@@ -103,37 +111,40 @@ export async function makeMaskStringFromDetection(detection: Detection, width: n
  */
 function imageDataToBase64(imageData: ImageData): string {
     //use canvas to create base64 respresentation of image mask
-    var canvas = document.createElement("canvas");
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-    var ctx = canvas.getContext("2d");
+    const { width, height } = imageData;
+    const canvas = resolveCanvas(width, height)
+    let ctx = canvas.getContext("2d");
     ctx.putImageData(imageData, 0, 0);
 
     return canvas.toDataURL()
 }
 
 /**
- * This only works when called in a browser context
+ *
  * @param originalImage the image as a base64 encoded string
  * @param blur should the image be blurred before drawing
  * @returns return image as ImageData
  */
 export async function getImageData(originalImage: string, blur: boolean = false): Promise<ImageData> {
     //The next few lines detail the process needed to create an imagebitmap, used for drawing on canvas
-    const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
-    const blob = new Blob([clampedArray])
-    const bitmap = await createImageBitmap(blob)
+    let image: any;
+    if (isBrowser) {
+        const clampedArray = Uint8ClampedArray.from(Buffer.from(sanitizeBase64(originalImage), 'base64'));
+        const blob = new Blob([clampedArray])
+        image = await createImageBitmap(blob)
+    } else {
+        image = await loadImage(originalImage);
+    }
 
-    const canvas = document.createElement("canvas");
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
-    var ctx = canvas.getContext("2d");
+    const { width, height } = image;
+    const canvas = resolveCanvas(width, height);
+    let ctx = canvas.getContext("2d");
 
     if (blur) {
         ctx.filter = 'blur(10px)';
     }
 
-    ctx.drawImage(bitmap, 0, 0)
+    ctx.drawImage(image, 0, 0)
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
@@ -149,18 +160,18 @@ export async function blur(originalImage: string, mask: string): Promise<string>
 
     const maskArray = (await getImageData(mask)).data;
     const blurredArray = (await getImageData(originalImage, true)).data;
-    const length = width * height * 4
-    const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
 
-    for (let i = 0; i < length; i++) {
-        destinationArray[i] = (maskArray[i] != 0) ? blurredArray[i] : data[i]
-    }
-
-    return imageDataToBase64(new ImageData(
-        destinationArray,
+    const canvas = resolveCanvas(width, height)
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.createImageData(
         width,
         height
-    ))
+    )
+
+    for (let i = 0; i < imageData.data.length; i++) {
+        imageData.data[i] = (maskArray[i] != 0) ? blurredArray[i] : data[i]
+    }
+    return imageDataToBase64(imageData)
 }
 
 /**
@@ -174,16 +185,31 @@ export async function extract(originalImage: string, mask: string): Promise<stri
     const { data, width, height } = await getImageData(originalImage);
     const maskArray = (await getImageData(mask)).data;
 
-    const length = width * height * 4
-    const destinationArray: Uint8ClampedArray = new Uint8ClampedArray(length)
-
-    for (let i = 0; i < length; i++) {
-        destinationArray[i] = (maskArray[i] != 0) ? data[i] : maskArray[i]
-    }
-
-    return imageDataToBase64(new ImageData(
-        destinationArray,
+    const canvas = resolveCanvas(width, height)
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.createImageData(
         width,
         height
-    ))
+    )
+
+    for (let i = 0; i < imageData.data.length; i++) {
+        imageData.data[i] = (maskArray[i] != 0) ? data[i] : maskArray[i]
+    }
+
+    return imageDataToBase64(imageData);
+}
+
+
+function resolveCanvas(width: number, height: number): any {
+    let canvas: any;
+    if (isBrowser) {
+        canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+    } else {
+        canvas = new Canvas(width, height)
+        canvas.async = false
+    }
+
+    return canvas;
 }

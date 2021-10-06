@@ -5,10 +5,31 @@ import { Classification, ClassifyResponse, Detection, ImageMetadata } from "./ty
  * Contains the results of a successful call to the classify endpoint
  */
 export declare class ClassifyResult {
+    /**
+     * The image as initially passed to the classify endpoint
+     * If was a url, will be changed to a base64 string for post processing functions
+     */
     image: string;
+    /**
+     * The classifications returned by the classify endpint
+     * See Classification interface for more information
+     */
     classifications: Classification[];
+    /**
+     * The detections returned by the classify endpint
+     * See Detection interface for more information
+     */
     detections: Detection[];
+    /**
+     * Metadata relating to the input image.
+     * See ImageMetadata interface for more information
+     */
     metadata: ImageMetadata;
+    /**
+     * @constructor
+     * @param image the original image as initially passed to the classify endpoint
+     * @param response the results of a successful call to the classify endpoint
+     */
     constructor(image: string, response: ClassifyResponse);
     /**
      * This function serves to blur a particular detection in the image

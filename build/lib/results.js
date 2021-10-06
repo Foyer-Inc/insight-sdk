@@ -22,6 +22,11 @@ const helpers_1 = require("./utils/helpers");
  * Contains the results of a successful call to the classify endpoint
  */
 class ClassifyResult {
+    /**
+     * @constructor
+     * @param image the original image as initially passed to the classify endpoint
+     * @param response the results of a successful call to the classify endpoint
+     */
     constructor(image, response) {
         this.image = image;
         this.classifications = response.classifications;
@@ -126,7 +131,7 @@ class ClassifyResult {
             if (!this.image.startsWith('data')) {
                 const img = yield (0, node_fetch_1.default)(this.image);
                 const buffer = yield img.buffer();
-                this.image = buffer.toString('base64');
+                this.image = `data:${img.headers.get('content-type')};base64,${buffer.toString('base64')}`;
             }
         });
     }

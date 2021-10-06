@@ -26,6 +26,7 @@
  * @author Vlad Vinogradov <vladvin@eora.ru>
 */
 
+const { Canvas } = require('skia-canvas');
 
 /**
  * Translate similar to LEB128 but using 6 bits/char and ascii chars 48-111-like string to RLE encoded array.
@@ -110,12 +111,54 @@ export const decode = (message: number[]): Uint8ClampedArray => {
 };
 
 /**
+ *
+ * @param data the image mask as an Uint8 array
+ * @param w width of the input data
+ * @param h height of the input data
+ * @returns an ImageData instance
+ */
+export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
+    const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
+    if (isBrowser) {
+        return toMaskImageDataBrowser(data, w, h)
+    }
+
+    return toMaskImageDataNode(data, w, h);
+}
+
+/**
  * Creates imageData from array of bits.
  * @example
  * ([0, 0, 0, 0], 2, 2) -> ImageData
- * @returns {Array} Returns sequence of bits
+ * @returns returns an ImageData instance
  */
-export const toMaskImageData = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
+const toMaskImageDataNode = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
+    const canvas = new Canvas(w, h)
+    canvas.async = false
+    let ctx = canvas.getContext("2d");
+    let image = ctx.createImageData(w, h);
+
+    for (let i = 0; i < data.length; i++) {
+        const value = data[i]
+        const pixelIndex = i * 4
+
+        image.data[pixelIndex] = value;
+        image.data[pixelIndex + 1] = value;
+        image.data[pixelIndex + 2] = value;
+        image.data[pixelIndex + 3] = value;
+    }
+
+    return image;
+};
+
+/**
+ * Creates imageData from array of bits.
+ * @example
+ * ([0, 0, 0, 0], 2, 2) -> ImageData
+ * @returns an ImageData instance
+ */
+const toMaskImageDataBrowser = (data: Uint8ClampedArray, w: number, h: number): ImageData => {
     let dataWithAdditionalLayers = [];
     for (let i = 0; i < data.length; i++) {
         dataWithAdditionalLayers.push(...[data[i], data[i], data[i], data[i]])

@@ -16,15 +16,6 @@
  * <http://www.doctrine-project.org>.
  */
 /**
- * RLE (Run-length Encoding) - encode/decode binary
- * image mask on JavaScript in the same way as in the
- * popular [COCO tools](https://pypi.org/project/pycocotools/) library
- *
- * @license http://www.opensource.org/licenses/mit-license.html  MIT License
- * @author Salavat Dinmukhametov <s.dinmukhametov@eora.ru>
- * @author Vlad Vinogradov <vladvin@eora.ru>
-*/
-/**
  * Translate similar to LEB128 but using 6 bits/char and ascii chars 48-111-like string to RLE encoded array.
  * @param {String} Output of encode COCO tools algorithm
  * @returns {Array} Returns rle encoded array
@@ -45,9 +36,10 @@ export declare const encode: (imageArray: Uint8ClampedArray) => number[];
  */
 export declare const decode: (message: number[]) => Uint8ClampedArray;
 /**
- * Creates imageData from array of bits.
- * @example
- * ([0, 0, 0, 0], 2, 2) -> ImageData
- * @returns {Array} Returns sequence of bits
+ *
+ * @param data the image mask as an Uint8 array
+ * @param w width of the input data
+ * @param h height of the input data
+ * @returns an ImageData instance
  */
 export declare const toMaskImageData: (data: Uint8ClampedArray, w: number, h: number) => ImageData;
