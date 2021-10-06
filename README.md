@@ -1,5 +1,7 @@
 # Foyer Insight
 [![npm](https://img.shields.io/npm/v/@foyer-inc/insight-sdk.svg)](https://www.npmjs.com/package/@foyer-inc/insight-sdk) [![MIT License](https://img.shields.io/github/license/Foyer-Inc/insight-sdk.svg)](https://github.com/Foyer-Inc/insight-sdk)
+
+Additional documentation at [Docs](./docs/modules.md)
 ### Listed below is example usage of the insight-sdk
 ```js
 import { ClassifyResult, Insight } from '@foyer-inc/insight-sdk'
