@@ -19,7 +19,7 @@
     "@types/node": "^16.10.2"
   },
   "scripts": {
-    "prepare": "rm -rf ./build; tsc --build tsconfig.json",
+    "prepublishOnly": "rm -rf ./build; tsc --build tsconfig.json",
     "build": "rm -rf ./build; tsc --build tsconfig.json"
   },
   "repository": {
