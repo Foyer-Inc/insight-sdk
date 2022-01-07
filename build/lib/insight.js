@@ -48,7 +48,7 @@ class Insight {
          * defaults to ['all'] for returning all available detections
          */
         this.detectionsRequested = ['all'];
-        this.baseURL = 'https://api.foyer.ai';
+        this.baseURL = 'https://api-v2.foyer.ai';
         this.authorization = options.authorization;
         this.force = (_a = options.force) !== null && _a !== void 0 ? _a : false;
         this.includeSegmentations = (_b = options.includeSegmentations) !== null && _b !== void 0 ? _b : false;
@@ -70,7 +70,7 @@ class Insight {
      */
     login(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            let response = yield (0, node_fetch_1.default)(`${this.baseURL}/accounts/login`, {
+            let response = yield (0, node_fetch_1.default)(`${this.baseURL}/User/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ class Insight {
      */
     classify(image, options = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.classifyRequest(image, options);
+            return (yield this.classifyRequest(image, options));
         });
     }
     /**
@@ -104,7 +104,7 @@ class Insight {
      */
     bulkClassify(images, options = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.classifyRequest(images, options);
+            return (yield this.classifyRequest(images, options));
         });
     }
     classifyRequest(images, options) {
@@ -114,14 +114,14 @@ class Insight {
                 force: (_a = options.force) !== null && _a !== void 0 ? _a : this.force,
                 includeSegmentations: (_b = options.includeSegmentations) !== null && _b !== void 0 ? _b : this.includeSegmentations,
                 includeTagpoints: (_c = options.includeTagpoints) !== null && _c !== void 0 ? _c : this.includeTagpoints,
-                detectionsRequested: (_d = options.detectionsRequested) !== null && _d !== void 0 ? _d : this.detectionsRequested
+                detectionsRequested: (_d = options.detectionsRequested) !== null && _d !== void 0 ? _d : this.detectionsRequested,
             };
             payload = yield (0, helpers_1.addImagesToPayload)(images, payload);
-            let response = yield (0, node_fetch_1.default)(`${this.baseURL}/images/classify`, {
+            let response = yield (0, node_fetch_1.default)(`${this.baseURL}/Media/classify`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': (_e = options.authorization) !== null && _e !== void 0 ? _e : this.authorization
+                    Authorization: (_e = options.authorization) !== null && _e !== void 0 ? _e : this.authorization,
                 },
                 body: JSON.stringify(payload),
             });
